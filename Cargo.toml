@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 clap = "~2.33"
+text_io = "0.1.8"

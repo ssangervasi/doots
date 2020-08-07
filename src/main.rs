@@ -1,5 +1,4 @@
-use std::io;
-
+use text_io::read;
 use clap::App; 
 
 fn main() { 
@@ -7,14 +6,12 @@ fn main() {
        .get_matches();
 	
 	println!("Guess the number!");
-
     println!("Please input your guess.");
 
-    let mut guess = String::new();
-
-    io::stdin()
-        .read_line(&mut guess)
-        .expect("Failed to read line");
+	let guess: i32 = read!();
 
     println!("You guessed: {}", guess);    
+    if guess == 69 {
+	    println!("Nice");    
+    }
 }
