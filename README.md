@@ -16,3 +16,5 @@ $ cargo run
 Hello, world!
 ```
 
+Code formatting with RustFmt is good:
+https://github.com/rust-lang/rustfmt#running-rustfmt-from-your-editor
