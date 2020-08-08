@@ -1,3 +1,7 @@
+pub const DOT: char = '·';
+pub const LINE_V: char = '│';
+pub const LINE_H: char = '─';
+
 #[derive(Default, Copy, Clone)]
 pub struct BoxChar {
     pub value: char,
@@ -9,7 +13,7 @@ pub struct BoxChar {
 
 pub const BOX_CHARS: [BoxChar; 16] = [
     BoxChar {
-        value: '·',
+        value: DOT,
         up: false,
         right: false,
         down: false,
@@ -72,14 +76,14 @@ pub const BOX_CHARS: [BoxChar; 16] = [
         left: true,
     },
     BoxChar {
-        value: '│',
+        value: LINE_V,
         up: true,
         right: false,
         down: true,
         left: false,
     },
     BoxChar {
-        value: '─',
+        value: LINE_H,
         up: false,
         right: true,
         down: false,
