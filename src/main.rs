@@ -1,5 +1,6 @@
 use clap::{App, Arg};
 
+mod board;
 mod box_drawings;
 
 fn main() {
@@ -20,35 +21,16 @@ fn main() {
         )
         .get_matches();
 
-    let game_size: u32 = match matches.value_of("size").unwrap().trim().parse() {
+    let board_size: board::BoardSize = match matches.value_of("size").unwrap().trim().parse() {
         Ok(int) => int,
         Err(_) => 10,
     };
-    println!("Game of size {}", game_size);
-
-    let mut grid = String::new();
-    for row in 0..=game_size {
-        // grid += format!("\n{}", 1);
-        for col in 0..=game_size {
-            if row == 0 && col == 0 {
-                grid.push_str("  ");
-                continue;
-            } else if row == 0 {
-                grid.push_str(&format!("{:2} ", col));
-                continue;
-            } else if col == 0 {
-                grid.push_str(&format!("\n{:2} ", row));
-                continue;
-            }
-            let entry = choose_char(row, col);
-            grid.push(entry.value);
-            grid.push_str(if entry.right { "──" } else { "  " });
-        }
-    }
-    print!("{}", grid)
+    println!("Game of size {}", board_size);
+    let board = board::Board::new(board_size);
+    println!("{}", board.to_string())
 }
 
-fn choose_char(row: u32, col: u32) -> box_drawings::BoxChar {
+fn choose_char(row: board::BoardSize, col: board::BoardSize) -> box_drawings::BoxChar {
     box_drawings::lookup(box_drawings::BoxChar {
         up: (5 <= row && row <= 8) || (6 <= row - 1 && row - 1 <= 7),
         right: 5 <= col && col <= 8,
@@ -58,7 +40,7 @@ fn choose_char(row: u32, col: u32) -> box_drawings::BoxChar {
     })
 }
 
-// let pairs: Vec<(u32, u32)> = (0..game_size)
-//     .flat_map(|row| (0..game_size).map(move |col| (row, col)))
+// let pairs: Vec<(u32, u32)> = (0..board_size)
+//     .flat_map(|row| (0..board_size).map(move |col| (row, col)))
 //     .collect();
 // println!("{:?}", pairs);
