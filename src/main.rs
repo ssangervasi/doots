@@ -54,9 +54,13 @@ fn main() {
         let dot_to = read_dot();
         println!("{:?} -> {:?}", dot_from, dot_to);
 
-        board.draw((dot_from, dot_to)).expect("Shit");
-
-        println!("{}", board.to_string());
+        match board.draw((dot_from, dot_to)) {
+            Ok(_) => println!("{}", board.to_string()),
+            Err(msg) => {
+                println!("{}", msg);
+                println!("Try again.");
+            }
+        }
     }
 }
 
