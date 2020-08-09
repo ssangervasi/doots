@@ -1,4 +1,5 @@
-use std::ops::Sub;
+use core::fmt;
+use std::ops;
 
 use crate::box_drawings::{lookup, BoxChar, LINE_H};
 
@@ -15,13 +16,19 @@ pub fn dot(row: BoardSize, col: BoardSize) -> Dot {
     Dot { row, col }
 }
 
+impl fmt::Display for Dot {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({}, {})", self.row, self.col)
+    }
+}
+
 impl PartialEq for Dot {
     fn eq(&self, other: &Self) -> bool {
         self.row == other.row && self.col == other.col
     }
 }
 
-impl Sub for Dot {
+impl ops::Sub for Dot {
     type Output = Dot;
 
     fn sub(self, other: Dot) -> Dot {
@@ -36,22 +43,29 @@ fn abs_sub(a: BoardSize, b: BoardSize) -> BoardSize {
     ((a as i8) - (b as i8)).abs() as BoardSize
 }
 
-pub type Edge = (Dot, Dot);
+#[derive(Default, Copy, Clone, Debug)]
+pub struct Edge(pub Dot, pub Dot);
+
+impl Edge {
+    pub fn is_valid(&self) -> bool {
+        let diff = self.1 - self.0;
+        diff.row + diff.col == 1
+    }
+
+    pub fn has_dot(&self, dot: Dot) -> bool {
+        self.0 == dot || self.1 == dot
+    }
+}
+
+impl fmt::Display for Edge {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({}, {})", self.0, self.1)
+    }
+}
 
 /* Shorthand to create an edge from tuples instead of dots. */
 pub fn edge((r1, c1): (BoardSize, BoardSize), (r2, c2): (BoardSize, BoardSize)) -> Edge {
-    (dot(r1, c1), dot(r2, c2))
-}
-
-fn is_valid(edge: Edge) -> bool {
-    let (d1, d2) = edge;
-    let diff = d2 - d1;
-    diff.row + diff.col == 1
-}
-
-fn has_dot(edge: Edge, dot: Dot) -> bool {
-    let (d1, d2) = edge;
-    d1 == dot || d2 == dot
+    Edge(dot(r1, c1), dot(r2, c2))
 }
 
 #[derive(Default, Clone, Debug)]
@@ -108,7 +122,7 @@ impl Board {
     }
 
     pub fn validate_draw(&self, edge: Edge) -> Result<Edge, String> {
-        if !is_valid(edge) {
+        if !edge.is_valid() {
             return Err(format!("Cannot draw invalid edge: {:?}", edge));
         } else if !self.contains_edge(edge) {
             return Err(format!(
@@ -121,7 +135,7 @@ impl Board {
         Ok(edge)
     }
 
-    pub fn is_free(&self, (d1, d2): Edge) -> bool {
+    pub fn is_free(&self, Edge(d1, d2): Edge) -> bool {
         for connected in self.find_connected(d1).iter() {
             if d2 == *connected {
                 return false;
@@ -140,7 +154,7 @@ impl Board {
     }
 
     /* Whether the edge fits in this board. */
-    pub fn contains_edge(&self, (d1, d2): Edge) -> bool {
+    pub fn contains_edge(&self, Edge(d1, d2): Edge) -> bool {
         self.contains(d1) && self.contains(d2)
     }
 
@@ -155,7 +169,7 @@ impl Board {
     pub fn find_edges(&self, dot: Dot) -> Vec<Edge> {
         let mut edges: Vec<Edge> = vec![];
         for edge in self.edges.iter() {
-            if has_dot(*edge, dot) {
+            if edge.has_dot(dot) {
                 edges.push(*edge)
             }
         }
@@ -166,7 +180,7 @@ impl Board {
         // let mut dots: Vec<Dot> = vec![];
         self.find_edges(dot)
             .iter()
-            .map(|(d1, d2)| if dot == *d1 { *d2 } else { *d1 })
+            .map(|Edge(d1, d2)| if dot == *d1 { *d2 } else { *d1 })
             .collect()
     }
 

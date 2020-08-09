@@ -1,8 +1,8 @@
 use clap::{App, Arg};
 use textwrap::dedent as dd;
 
-use doots::board::{Board, BoardSize, Dot};
-use doots::utils::read_dot;
+use doots::board::{Board, BoardSize};
+use doots::hoomin::{Hoomin, Player};
 
 fn main() {
     let matches = App::new("doots")
@@ -24,39 +24,24 @@ fn main() {
         Ok(int) => int,
         Err(_) => 10,
     };
-    println!("Game of size {}", board_size);
     let mut board = Board::new(board_size);
-
-    println!("Drawing sample box:");
-    board
-        .draw((Dot { row: 2, col: 2 }, Dot { row: 2, col: 3 }))
-        .expect("Shit");
-    board
-        .draw((Dot { row: 2, col: 3 }, Dot { row: 3, col: 3 }))
-        .expect("Shit");
-    board
-        .draw((Dot { row: 3, col: 2 }, Dot { row: 3, col: 3 }))
-        .expect("Shit");
-    board
-        .draw((Dot { row: 2, col: 2 }, Dot { row: 3, col: 2 }))
-        .expect("Shit");
+    println!(
+        "Game with {} squares ({}x{} dots)",
+        board.size,
+        board.dot_size(),
+        board.dot_size()
+    );
     println!("{}", board.to_string());
 
-    loop {
-        println!("Draw an edge (row, col) -> (row, col):");
-        println!("from: ");
-        let dot_from = read_dot();
-        println!("to  : ");
-        let dot_to = read_dot();
-        println!("{:?} -> {:?}", dot_from, dot_to);
+    let player = Hoomin {};
 
-        match board.draw((dot_from, dot_to)) {
-            Ok(_) => println!("{}", board.to_string()),
-            Err(msg) => {
-                println!("{}", msg);
-                println!("Try again.");
-            }
-        }
+    loop {
+        let player_edge = player.play(board.clone());
+        board.draw(player_edge).expect(&format!(
+            "Player attempted to play invalid move: {}",
+            player_edge
+        ));
+        println!("{}", board.to_string())
     }
 }
 
