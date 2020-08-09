@@ -68,8 +68,14 @@ impl Board {
         }
     }
 
+    /* The number of dots in a row (equal to column) */
+    pub fn dot_size(&self) -> u8 {
+        self.size + 1
+    }
+
+    /* The number of dots in the whole board */
     pub fn dot_count(&self) -> u8 {
-        let (sq, is_over) = (self.size + 1).overflowing_pow(2);
+        let (sq, is_over) = (self.dot_size()).overflowing_pow(2);
         if is_over {
             // As if this will ever happened:
             u8::MAX
@@ -130,12 +136,17 @@ impl Board {
 
     /* Whether the dot fits in this board. */
     pub fn contains(&self, dot: Dot) -> bool {
-        dot.row <= self.dot_count() && dot.col <= self.dot_count()
+        dot.row < self.dot_size() && dot.col < self.dot_size()
     }
 
     /* Whether the edge fits in this board. */
     pub fn contains_edge(&self, (d1, d2): Edge) -> bool {
         self.contains(d1) && self.contains(d2)
+    }
+
+    pub fn iter_dots(&self) -> impl Iterator<Item = Dot> {
+        let size = self.size;
+        (0..size).flat_map(move |row| (0..size).map(move |col| dot(row, col)))
     }
 
     /**
@@ -161,29 +172,31 @@ impl Board {
 
     pub fn to_string(&self) -> String {
         let mut grid = String::new();
-        for row in 0..=self.size {
-            for col in 0..=self.size {
+        for row in 0..=self.dot_size() {
+            for col in 0..=self.dot_size() {
                 // Handle header row and left column:
                 if row == 0 && col == 0 {
                     grid.push_str("  ");
                     continue;
                 } else if row == 0 {
-                    grid.push_str(&format!("{:2} ", col));
+                    grid.push_str(&format!("{:2} ", col - 1));
                     continue;
                 } else if col == 0 {
-                    grid.push_str(&format!("\n{:2} ", row));
+                    grid.push_str(&format!("\n{:2} ", row - 1));
                     continue;
                 }
 
                 // Othwerwise, pick the appropriate box intersection:
-                let entry = self.choose_char(Dot { row, col });
+                let entry = self.choose_char(dot(row - 1, col - 1));
                 grid.push(entry.value);
 
                 // Extend right to account for horizontal space:
                 let spacer = if entry.right {
                     LINE_H.to_string().repeat(2)
-                } else {
+                } else if col != self.dot_size() {
                     "  ".to_string()
+                } else {
+                    "".to_string()
                 };
                 grid.push_str(&spacer)
             }
