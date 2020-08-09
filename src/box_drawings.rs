@@ -106,15 +106,15 @@ pub const BOX_CHARS: [BoxChar; 16] = [
     BoxChar {
         value: '┤',
         up: true,
-        right: true,
-        down: false,
+        right: false,
+        down: true,
         left: true,
     },
     BoxChar {
         value: '┴',
         up: true,
-        right: false,
-        down: true,
+        right: true,
+        down: false,
         left: true,
     },
     BoxChar {

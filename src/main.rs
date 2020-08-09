@@ -1,12 +1,8 @@
 use clap::{App, Arg};
 use textwrap::dedent as dd;
 
-mod board;
-mod box_drawings;
-mod utils;
-
-use crate::board::{Board, BoardSize, Dot};
-use crate::utils::read_dot;
+use doots::board::{Board, BoardSize, Dot};
+use doots::utils::read_dot;
 
 fn main() {
     let matches = App::new("doots")

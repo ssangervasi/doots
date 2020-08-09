@@ -10,6 +10,11 @@ pub struct Dot {
     pub col: BoardSize,
 }
 
+/* Shorthand to create dot. */
+pub fn dot(row: BoardSize, col: BoardSize) -> Dot {
+    Dot { row, col }
+}
+
 impl PartialEq for Dot {
     fn eq(&self, other: &Self) -> bool {
         self.row == other.row && self.col == other.col
@@ -32,6 +37,11 @@ fn abs_sub(a: BoardSize, b: BoardSize) -> BoardSize {
 }
 
 pub type Edge = (Dot, Dot);
+
+/* Shorthand to create an edge from tuples instead of dots. */
+pub fn edge((r1, c1): (BoardSize, BoardSize), (r2, c2): (BoardSize, BoardSize)) -> Edge {
+    (dot(r1, c1), dot(r2, c2))
+}
 
 fn is_valid(edge: Edge) -> bool {
     let (d1, d2) = edge;
@@ -69,6 +79,29 @@ impl Board {
     }
 
     pub fn draw(&mut self, edge: Edge) -> Result<Edge, String> {
+        let validation = self.validate_draw(edge);
+        if validation.is_ok() {
+            self.edges.push(edge);
+        }
+        validation
+    }
+
+    pub fn draw_many(&mut self, edges: Vec<Edge>) -> Result<BoardSize, String> {
+        let mut success_count = 0;
+        for edge in &edges {
+            let validation = self.validate_draw(*edge);
+            if validation.is_err() {
+                return Err(validation.unwrap_err());
+            }
+            success_count += 1
+        }
+        for edge in edges {
+            self.edges.push(edge);
+        }
+        Ok(success_count)
+    }
+
+    pub fn validate_draw(&self, edge: Edge) -> Result<Edge, String> {
         if !is_valid(edge) {
             return Err(format!("Cannot draw invalid edge: {:?}", edge));
         } else if !self.contains_edge(edge) {
@@ -79,7 +112,6 @@ impl Board {
         } else if self.is_drawn(edge) {
             return Err(format!("Cannot redraw edge: {:?}", edge));
         }
-        self.edges.push(edge);
         Ok(edge)
     }
 
