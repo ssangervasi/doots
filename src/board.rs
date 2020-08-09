@@ -51,8 +51,6 @@ pub struct Board {
 }
 
 impl Board {
-    pub fn dot_count() -> u8 {}
-
     pub fn new(size: BoardSize) -> Board {
         Board {
             size,
@@ -60,10 +58,25 @@ impl Board {
         }
     }
 
+    pub fn dot_count(&self) -> u8 {
+        let (sq, is_over) = (self.size + 1).overflowing_pow(2);
+        if is_over {
+            // As if this will ever happened:
+            u8::MAX
+        } else {
+            sq
+        }
+    }
+
     pub fn draw(&mut self, edge: Edge) -> Result<Edge, String> {
         if !is_valid(edge) {
             return Err(format!("Cannot draw invalid edge: {:?}", edge));
-        } else if !self.is_free(edge) {
+        } else if !self.contains_edge(edge) {
+            return Err(format!(
+                "Edge {:?} does not fit in board of size {}",
+                edge, self.size
+            ));
+        } else if self.is_drawn(edge) {
             return Err(format!("Cannot redraw edge: {:?}", edge));
         }
         self.edges.push(edge);
@@ -79,9 +92,18 @@ impl Board {
         true
     }
 
+    pub fn is_drawn(&self, edge: Edge) -> bool {
+        !self.is_free(edge)
+    }
+
     /* Whether the dot fits in this board. */
     pub fn contains(&self, dot: Dot) -> bool {
-        dot.x < self.size
+        dot.row <= self.dot_count() && dot.col <= self.dot_count()
+    }
+
+    /* Whether the edge fits in this board. */
+    pub fn contains_edge(&self, (d1, d2): Edge) -> bool {
+        self.contains(d1) && self.contains(d2)
     }
 
     /**
