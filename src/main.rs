@@ -1,9 +1,12 @@
-use crate::board::{Board, BoardSize, Dot};
-
 use clap::{App, Arg};
 use textwrap::dedent as dd;
 
+mod board;
 mod box_drawings;
+mod utils;
+
+use crate::board::{Board, BoardSize, Dot};
+use crate::utils::read_dot;
 
 fn main() {
     let matches = App::new("doots")
@@ -27,9 +30,34 @@ fn main() {
     };
     println!("Game of size {}", board_size);
     let mut board = Board::new(board_size);
-    board.draw((Dot { row: 2, col: 2 }, Dot { row: 2, col: 3 }));
-    board.draw((Dot { row: 3, col: 2 }, Dot { row: 2, col: 2 }));
-    println!("{}", board.to_string())
+
+    println!("Drawing sample box:");
+    board
+        .draw((Dot { row: 2, col: 2 }, Dot { row: 2, col: 3 }))
+        .expect("Shit");
+    board
+        .draw((Dot { row: 2, col: 3 }, Dot { row: 3, col: 3 }))
+        .expect("Shit");
+    board
+        .draw((Dot { row: 3, col: 2 }, Dot { row: 3, col: 3 }))
+        .expect("Shit");
+    board
+        .draw((Dot { row: 2, col: 2 }, Dot { row: 3, col: 2 }))
+        .expect("Shit");
+    println!("{}", board.to_string());
+
+    loop {
+        println!("Draw an edge (row, col) -> (row, col):");
+        println!("from: ");
+        let dot_from = read_dot();
+        println!("to  : ");
+        let dot_to = read_dot();
+        println!("{:?} -> {:?}", dot_from, dot_to);
+
+        board.draw((dot_from, dot_to)).expect("Shit");
+
+        println!("{}", board.to_string());
+    }
 }
 
 // let pairs: Vec<(u32, u32)> = (0..board_size)
