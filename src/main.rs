@@ -33,15 +33,21 @@ fn main() {
     );
     println!("{}", board.to_string());
 
-    let player = Hoomin {};
+    let players = [Hoomin::one(), Hoomin::two()];
+    let mut player_index = 0;
 
     loop {
+        let player = &players[player_index];
+        println!("Player {}'s turn", player.name());
+
         let player_edge = player.play(board.clone());
         board.draw(player_edge).expect(&format!(
-            "Player attempted to play invalid move: {}",
+            "Player {} attempted to play invalid move: {}",
+            player.name(),
             player_edge
         ));
-        println!("{}", board.to_string())
+        player_index = (player_index + 1) % players.len();
+        println!("{}\n", board.to_string())
     }
 }
 

@@ -1,7 +1,7 @@
 use core::fmt;
 use std::ops;
 
-use crate::box_drawings::{lookup, BoxChar, LINE_H};
+use crate::box_drawings::{lookup, BoxChar, DOT, LINE_H};
 
 pub type BoardSize = u8;
 
@@ -59,7 +59,7 @@ impl Edge {
 
 impl fmt::Display for Edge {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "({}, {})", self.0, self.1)
+        write!(f, "{}{}{}{}{}", self.0, DOT, LINE_H, DOT, self.1)
     }
 }
 
@@ -123,14 +123,14 @@ impl Board {
 
     pub fn validate_draw(&self, edge: Edge) -> Result<Edge, String> {
         if !edge.is_valid() {
-            return Err(format!("Cannot draw invalid edge: {:?}", edge));
+            return Err(format!("Cannot draw invalid edge: {}", edge));
         } else if !self.contains_edge(edge) {
             return Err(format!(
                 "Edge {:?} does not fit in board of size {}",
                 edge, self.size
             ));
         } else if self.is_drawn(edge) {
-            return Err(format!("Cannot redraw edge: {:?}", edge));
+            return Err(format!("Cannot redraw edge: {}", edge));
         }
         Ok(edge)
     }
@@ -149,8 +149,10 @@ impl Board {
     }
 
     /* Whether the dot fits in this board. */
-    pub fn contains(&self, dot: Dot) -> bool {
-        dot.row < self.dot_size() && dot.col < self.dot_size()
+    pub fn contains(&self, Dot { row, col }: Dot) -> bool {
+        // Note that comparison to zero is unnecessary due to
+        // unsigned integer type.
+        row < self.dot_size() && col < self.dot_size()
     }
 
     /* Whether the edge fits in this board. */
