@@ -98,6 +98,14 @@ impl Board {
         }
     }
 
+    pub fn edge_count(&self) -> BoardSize {
+        2 * self.size * self.dot_size()
+    }
+
+    pub fn is_full(&self) -> bool {
+        (self.edge_count() as usize) <= self.edges.len()
+    }
+
     pub fn draw(&mut self, edge: Edge) -> Result<Edge, String> {
         let validation = self.validate_draw(edge);
         if validation.is_ok() {

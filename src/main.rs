@@ -5,6 +5,13 @@ use doots::board::{Board, BoardSize};
 use doots::hoomin::{Hoomin, Player};
 
 fn main() {
+    match cli() {
+        Ok(_) => println!("Done."),
+        Err(msg) => println!("{}", msg),
+    }
+}
+
+fn cli() -> Result<(), String> {
     let matches = App::new("doots")
         .arg(
             Arg::with_name("size")
@@ -24,6 +31,17 @@ fn main() {
         Ok(int) => int,
         Err(_) => 10,
     };
+    if 100 < board_size {
+        return Err(format!(
+            "{} squares? Ain't nobody got time for that!",
+            board_size
+        ));
+    }
+
+    run_game(board_size)
+}
+
+fn run_game(board_size: BoardSize) -> Result<(), String> {
     let mut board = Board::new(board_size);
     println!(
         "Game with {} squares ({}x{} dots)",
@@ -41,14 +59,26 @@ fn main() {
         println!("Player {}'s turn", player.name());
 
         let player_edge = player.play(board.clone());
-        board.draw(player_edge).expect(&format!(
-            "Player {} attempted to play invalid move: {}",
-            player.name(),
-            player_edge
-        ));
+        match board.draw(player_edge) {
+            Err(_) => {
+                return Err(format!(
+                    "Player {} attempted to play invalid move: {}",
+                    player.name(),
+                    player_edge,
+                ));
+            }
+            _ => {}
+        };
+
         player_index = (player_index + 1) % players.len();
-        println!("{}\n", board.to_string())
+        println!("{}\n", board.to_string());
+
+        if board.is_full() {
+            break;
+        };
     }
+
+    Ok(())
 }
 
 // let pairs: Vec<(u32, u32)> = (0..board_size)
