@@ -3,7 +3,7 @@ use std::ops;
 
 use crate::box_drawings::{lookup, BoxChar, DOT, LINE_H};
 
-pub type BoardSize = u8;
+pub type BoardSize = u16;
 
 #[derive(Default, Copy, Clone, Debug, Eq)]
 pub struct Dot {
@@ -83,16 +83,16 @@ impl Board {
     }
 
     /* The number of dots in a row (equal to column) */
-    pub fn dot_size(&self) -> u8 {
+    pub fn dot_size(&self) -> BoardSize {
         self.size + 1
     }
 
     /* The number of dots in the whole board */
-    pub fn dot_count(&self) -> u8 {
+    pub fn dot_count(&self) -> BoardSize {
         let (sq, is_over) = (self.dot_size()).overflowing_pow(2);
         if is_over {
             // As if this will ever happened:
-            u8::MAX
+            BoardSize::MAX
         } else {
             sq
         }
