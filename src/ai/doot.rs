@@ -1,4 +1,4 @@
-use crate::game::board::{Board, Edge};
+use crate::game::board::{edge, Board, Edge};
 use crate::players::player::Player;
 
 #[derive(Debug, Clone)]
@@ -12,6 +12,11 @@ impl Player for Doot {
     }
 
     fn play(&self, board: Board) -> Edge {
-        *board.edges.first().unwrap()
+        for edge in board.iter_edges() {
+            if board.is_free(edge) {
+                return edge;
+            }
+        }
+        return edge((0, 0), (0, 1));
     }
 }

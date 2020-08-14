@@ -1,72 +1,5 @@
-use core::fmt;
-use std::ops;
-
-use crate::game::box_drawings::{lookup, BoxChar, DOT, LINE_H};
-
-pub type BoardSize = u16;
-
-#[derive(Default, Copy, Clone, Debug, Eq)]
-pub struct Dot {
-    pub row: BoardSize,
-    pub col: BoardSize,
-}
-
-/* Shorthand to create dot. */
-pub fn dot(row: BoardSize, col: BoardSize) -> Dot {
-    Dot { row, col }
-}
-
-impl fmt::Display for Dot {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "({}, {})", self.row, self.col)
-    }
-}
-
-impl PartialEq for Dot {
-    fn eq(&self, other: &Self) -> bool {
-        self.row == other.row && self.col == other.col
-    }
-}
-
-impl ops::Sub for Dot {
-    type Output = Dot;
-
-    fn sub(self, other: Dot) -> Dot {
-        Dot {
-            row: abs_sub(self.row, other.row),
-            col: abs_sub(self.col, other.col),
-        }
-    }
-}
-
-fn abs_sub(a: BoardSize, b: BoardSize) -> BoardSize {
-    ((a as i8) - (b as i8)).abs() as BoardSize
-}
-
-#[derive(Default, Copy, Clone, Debug)]
-pub struct Edge(pub Dot, pub Dot);
-
-impl Edge {
-    pub fn is_valid(&self) -> bool {
-        let diff = self.1 - self.0;
-        diff.row + diff.col == 1
-    }
-
-    pub fn has_dot(&self, dot: Dot) -> bool {
-        self.0 == dot || self.1 == dot
-    }
-}
-
-impl fmt::Display for Edge {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{}{}", self.0, DOT, LINE_H, DOT, self.1)
-    }
-}
-
-/* Shorthand to create an edge from tuples instead of dots. */
-pub fn edge((r1, c1): (BoardSize, BoardSize), (r2, c2): (BoardSize, BoardSize)) -> Edge {
-    Edge(dot(r1, c1), dot(r2, c2))
-}
+pub use crate::game::basic_types::{dot, edge, BoardSize, Dot, Edge};
+use crate::game::box_drawings::{lookup, BoxChar, LINE_H};
 
 #[derive(Default, Clone, Debug)]
 pub struct Board {
@@ -132,7 +65,7 @@ impl Board {
     pub fn validate_draw(&self, edge: Edge) -> Result<Edge, String> {
         if !edge.is_valid() {
             return Err(format!("Cannot draw invalid edge: {}", edge));
-        } else if !self.contains_edge(edge) {
+        } else if !self.edge_fits(edge) {
             return Err(format!(
                 "Edge {:?} does not fit in board of size {}",
                 edge, self.size
@@ -157,20 +90,46 @@ impl Board {
     }
 
     /* Whether the dot fits in this board. */
-    pub fn contains(&self, Dot { row, col }: Dot) -> bool {
+    pub fn dot_fits(&self, Dot { row, col }: Dot) -> bool {
         // Note that comparison to zero is unnecessary due to
         // unsigned integer type.
         row < self.dot_size() && col < self.dot_size()
     }
 
     /* Whether the edge fits in this board. */
-    pub fn contains_edge(&self, Edge(d1, d2): Edge) -> bool {
-        self.contains(d1) && self.contains(d2)
+    pub fn edge_fits(&self, Edge(d1, d2): Edge) -> bool {
+        self.dot_fits(d1) && self.dot_fits(d2)
     }
 
+    /* Iterate across all dots in order of left-to-right, top-to-botom. */
     pub fn iter_dots(&self) -> impl Iterator<Item = Dot> {
-        let size = self.size;
+        let size = self.dot_size();
         (0..size).flat_map(move |row| (0..size).map(move |col| dot(row, col)))
+    }
+
+    /* Iterate across all edges in the same order as iter_dots.
+     * All edges are relative to the upper-left of a square,
+     * meaning every edge will be one of these two forms:
+     *   - (upper_left_dot, upper_right_dot)
+     *   - (upper_left_dot, lower_left_dot)
+     * This also means that right-most and bottom-most edges will
+     * appear only as second entries of an edge.
+     */
+    pub fn iter_edges(&self) -> impl Iterator<Item = Edge> {
+        let max_dot_index = self.dot_size() - 1;
+        self.iter_dots().flat_map(move |d| {
+            let mut d_edges = vec![];
+            // Right
+            if d.col < max_dot_index {
+                d_edges.push(Edge(d, d + dot(0, 1)));
+            }
+            // Down
+            if d.row < max_dot_index {
+                d_edges.push(Edge(d, d + dot(1, 0)));
+            }
+
+            d_edges
+        })
     }
 
     /**

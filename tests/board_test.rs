@@ -17,6 +17,49 @@ fn test_is_free() {
 }
 
 #[test]
+fn test_iter_dots() {
+    let board = Board::new(2);
+    let dots = board.iter_dots();
+    let mut count = 0;
+
+    for (i, dot) in dots.enumerate() {
+        println!("{}: {}", i, dot);
+        count += 1;
+    }
+    assert_eq!(board.dot_count(), count)
+}
+
+#[test]
+fn test_iter_edges_count() {
+    let board = Board::new(2);
+    let edges = board.iter_edges();
+    let mut count = 0;
+
+    for (i, edge) in edges.enumerate() {
+        println!("{}: {}", i, edge);
+        count += 1;
+    }
+    assert_eq!(board.edge_count(), count)
+}
+
+#[test]
+fn test_iter_edges() {
+    let board = Board::new(2);
+    let mut edges = board.iter_edges();
+
+    assert_eq!(edge((0, 0), (0, 1)), edges.next().unwrap());
+    assert_eq!(edge((0, 0), (1, 0)), edges.next().unwrap());
+
+    assert_eq!(edge((0, 1), (0, 2)), edges.next().unwrap());
+    assert_eq!(edge((0, 1), (1, 1)), edges.next().unwrap());
+
+    assert_eq!(edge((0, 2), (1, 2)), edges.next().unwrap());
+
+    assert_eq!(edge((1, 0), (1, 1)), edges.next().unwrap());
+    assert_eq!(edge((1, 0), (2, 0)), edges.next().unwrap());
+}
+
+#[test]
 fn test_dot_chars_at_two_way_intersections() {
     let mut board = Board::new(2);
     board
