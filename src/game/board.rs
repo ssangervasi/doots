@@ -1,7 +1,7 @@
 use core::fmt;
 use std::ops;
 
-use crate::box_drawings::{lookup, BoxChar, DOT, LINE_H};
+use crate::game::box_drawings::{lookup, BoxChar, DOT, LINE_H};
 
 pub type BoardSize = u16;
 

@@ -3,7 +3,7 @@ use std::io;
 use lazy_static::lazy_static;
 use regex::Regex;
 
-use crate::board::{BoardSize, Dot};
+use crate::game::board::{BoardSize, Dot};
 
 pub fn read_dot() -> Dot {
     lazy_static! {

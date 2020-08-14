@@ -1,4 +1,4 @@
-use doots::board::{dot, edge, Board};
+use doots::game::board::{dot, edge, Board};
 
 #[test]
 fn it_calculates_dot_count() {

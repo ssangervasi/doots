@@ -1,5 +1,5 @@
-use crate::board::{Board, Edge};
-use crate::utils::read_dot;
+use crate::game::board::{Board, Edge};
+use crate::game::utils::read_dot;
 
 pub trait Player {
     fn name(&self) -> String;

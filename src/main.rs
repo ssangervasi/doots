@@ -1,8 +1,8 @@
 use clap::{App, Arg};
 use textwrap::dedent as dd;
 
-use doots::board::{Board, BoardSize};
-use doots::hoomin::{Hoomin, Player};
+use doots::game::board::{Board, BoardSize};
+use doots::players::hoomin::{Hoomin, Player};
 
 fn main() {
     match cli() {
