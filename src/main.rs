@@ -2,13 +2,19 @@ use clap::{App, Arg};
 use textwrap::dedent as dd;
 
 use doots::game::board::{Board, BoardSize};
-use doots::players::hoomin::{Hoomin, Player};
+use doots::players::choose::choose;
 
 fn main() {
     match cli() {
         Ok(_) => println!("Done."),
         Err(msg) => println!("{}", msg),
     }
+}
+
+struct CLIOpts {
+    board_size: BoardSize,
+    player_two: String,
+    player_one: String,
 }
 
 fn cli() -> Result<(), String> {
@@ -25,6 +31,22 @@ fn cli() -> Result<(), String> {
                         size 2 => 2x2 grid => 9 dots
                     ")),
         )
+        .arg(
+            Arg::with_name("player_one")
+                .short("1")
+                .long("player-one")
+                .takes_value(true)
+                .default_value("hoomin")
+                .help("Player one type"),
+        )
+        .arg(
+            Arg::with_name("player_two")
+                .short("2")
+                .long("player-two")
+                .takes_value(true)
+                .default_value("hoomin")
+                .help("Player two type"),
+        )
         .get_matches();
 
     let board_size: BoardSize = match matches.value_of("size").unwrap().trim().parse() {
@@ -38,11 +60,18 @@ fn cli() -> Result<(), String> {
         ));
     }
 
-    run_game(board_size)
+    let player_one = matches.value_of("player_one").unwrap().to_string();
+    let player_two = matches.value_of("player_two").unwrap().to_string();
+
+    run_game(&CLIOpts {
+        board_size,
+        player_one,
+        player_two,
+    })
 }
 
-fn run_game(board_size: BoardSize) -> Result<(), String> {
-    let mut board = Board::new(board_size);
+fn run_game(cli_opts: &CLIOpts) -> Result<(), String> {
+    let mut board = Board::new(cli_opts.board_size);
     println!(
         "Game with {} squares ({}x{} dots)",
         board.size,
@@ -51,7 +80,7 @@ fn run_game(board_size: BoardSize) -> Result<(), String> {
     );
     println!("{}", board.to_string());
 
-    let players = [Hoomin::one(), Hoomin::two()];
+    let players = choose(&cli_opts.player_one, &cli_opts.player_two);
     let mut player_index = 0;
 
     loop {

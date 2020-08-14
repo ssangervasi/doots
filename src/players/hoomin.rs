@@ -1,10 +1,6 @@
 use crate::game::board::{Board, Edge};
-use crate::game::utils::read_dot;
-
-pub trait Player {
-    fn name(&self) -> String;
-    fn play(&self, board: Board) -> Edge;
-}
+use crate::players::io::read_dot;
+use crate::players::player::Player;
 
 #[derive(Debug, Clone)]
 pub struct Hoomin {
