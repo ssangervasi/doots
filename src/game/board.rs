@@ -1,10 +1,22 @@
 pub use crate::game::basic_types::{dot, edge, BoardSize, Dot, Edge};
 use crate::game::box_drawings::{lookup, BoxChar, LINE_H, LINE_V};
+use crate::players::player::PlayerId;
 
-#[derive(Default, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct Board {
     pub size: BoardSize,
     pub edges: Vec<Edge>,
+    pub player_ids: Vec<PlayerId>,
+}
+
+impl Default for Board {
+    fn default() -> Self {
+        Self {
+            size: 2,
+            edges: vec![],
+            player_ids: vec![PlayerId::One, PlayerId::Two],
+        }
+    }
 }
 
 impl Board {
@@ -87,6 +99,15 @@ impl Board {
 
     pub fn is_drawn(&self, edge: Edge) -> bool {
         !self.is_free(edge)
+    }
+
+    pub fn edge_owner(&self, edge: Edge) -> Option<PlayerId> {
+        for (i, &drawn_edge) in self.edges.iter().enumerate() {
+            if drawn_edge == edge {
+                return Some(self.player_ids[i % self.player_ids.len()]);
+            }
+        }
+        None
     }
 
     /* Whether the dot fits in this board. */

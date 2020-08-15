@@ -84,14 +84,15 @@ fn run_game(cli_opts: &CLIOpts) -> Result<(), String> {
     let mut player_index = 0;
 
     loop {
-        let player = &players[player_index];
-        println!("Player {}'s turn", player.name());
+        let (player_id, player) = &players[player_index];
+        println!("Player ({:?})'s turn", player_id);
 
         let player_edge = player.play(board.clone());
         match board.draw(player_edge) {
             Err(_) => {
                 return Err(format!(
-                    "Player {} attempted to play invalid move: {}",
+                    "Player {:?} ({}) attempted to play invalid move: {}",
+                    player_id,
                     player.name(),
                     player_edge,
                 ));
