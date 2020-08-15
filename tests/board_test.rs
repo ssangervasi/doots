@@ -104,43 +104,47 @@ fn test_box_owner_when_players_perfectly_alternate() {
     assert_that!(board.box_owner(dot(1, 1)).unwrap()).is_equal_to(PlayerId::Two);
 }
 
-#[test]
-fn test_box_owner_when_both_players_diverge() {
-    let mut board = Board::new(10);
-    board
-        .draw_many(vec![
-            // Start working on this box together...
-            edge((1, 1), (1, 2)),
-            edge((1, 1), (2, 1)),
-            // Go off and do some other stuff...
-            edge((7, 7), (7, 8)),
-            edge((9, 10), (10, 10)),
-            // Come back and finish that box...
-            edge((2, 2), (1, 2)),
-            edge((2, 2), (2, 1)),
-        ])
-        .expect("Draw failed");
+mod test_box_owner {
+    use super::*;
 
-    assert_that!(board.box_owner(dot(1, 1)).unwrap()).is_equal_to(PlayerId::Two);
-}
+    #[test]
+    fn test_box_owner_when_both_players_diverge() {
+        let mut board = Board::new(10);
+        board
+            .draw_many(vec![
+                // Start working on this box together...
+                edge((1, 1), (1, 2)),
+                edge((1, 1), (2, 1)),
+                // Go off and do some other stuff...
+                edge((7, 7), (7, 8)),
+                edge((9, 10), (10, 10)),
+                // Come back and finish that box...
+                edge((2, 2), (1, 2)),
+                edge((2, 2), (2, 1)),
+            ])
+            .expect("Draw failed");
 
-#[test]
-fn test_box_owner_when_one_player_diverges() {
-    let mut board = Board::new(10);
-    board
-        .draw_many(vec![
-            // Start working on this box together...
-            edge((1, 1), (1, 2)),
-            edge((1, 1), (2, 1)),
-            edge((2, 2), (1, 2)),
-            // Player two overlooks the last edge...
-            edge((7, 7), (7, 8)),
-            // Player one claims the box
-            edge((2, 2), (2, 1)),
-        ])
-        .expect("Draw failed");
+        assert_that!(board.box_owner(dot(1, 1)).unwrap()).is_equal_to(PlayerId::Two);
+    }
 
-    assert_that!(board.box_owner(dot(1, 1)).unwrap()).is_equal_to(PlayerId::One);
+    #[test]
+    fn test_box_owner_when_one_player_diverges() {
+        let mut board = Board::new(10);
+        board
+            .draw_many(vec![
+                // Start working on this box together...
+                edge((1, 1), (1, 2)),
+                edge((1, 1), (2, 1)),
+                edge((2, 2), (1, 2)),
+                // Player two overlooks the last edge...
+                edge((7, 7), (7, 8)),
+                // Player one claims the box
+                edge((2, 2), (2, 1)),
+            ])
+            .expect("Draw failed");
+
+        assert_that!(board.box_owner(dot(1, 1)).unwrap()).is_equal_to(PlayerId::One);
+    }
 }
 
 #[test]
