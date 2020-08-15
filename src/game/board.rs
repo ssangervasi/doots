@@ -156,7 +156,7 @@ impl Board {
         if indexes.len() < 4 {
             return None;
         }
-        self.edge_index_owner(indexes[3])
+        self.edge_index_owner(*indexes.last().unwrap())
     }
 
     /* Whether the dot fits in this board. */
