@@ -1,29 +1,34 @@
 use crate::game::board::{Board, Edge};
 use crate::players::io::read_dot;
-use crate::players::player::Player;
+use crate::players::player::{Player, PlayerId};
+
+pub const KEY: &str = "hoomin";
 
 #[derive(Debug, Clone)]
 pub struct Hoomin {
+    id: PlayerId,
     name: String,
 }
 
 impl Hoomin {
-    pub fn one() -> Hoomin {
+    pub fn new(id: PlayerId) -> Self {
         Hoomin {
-            name: "one".to_string(),
+            id,
+            name: match id {
+                PlayerId::One => "Hoomin One".to_string(),
+                PlayerId::Two => "Hoomin Two".to_string(),
+            },
         }
     }
 
-    pub fn two() -> Hoomin {
-        Hoomin {
-            name: "two".to_string(),
-        }
+    pub fn named(id: PlayerId, name: String) -> Self {
+        Self { id, name }
     }
 }
 
 impl Player for Hoomin {
     fn name(&self) -> String {
-        self.name.clone()
+        self.name.to_string()
     }
 
     fn play(&self, board: Board) -> Edge {

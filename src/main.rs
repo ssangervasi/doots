@@ -7,7 +7,7 @@ use doots::players::choose::choose;
 fn main() {
     match cli() {
         Ok(_) => println!("Done."),
-        Err(msg) => println!("{}", msg),
+        Err(msg) => eprintln!("{}", msg),
     }
 }
 
@@ -17,6 +17,11 @@ struct CLIOpts {
     player_one: String,
 }
 
+const SIZE_DEFAULT: BoardSize = 10;
+const SIZE_DEFAULT_STR: &str = "10";
+const SIZE_MIN: BoardSize = 1;
+const SIZE_MAX: BoardSize = 100;
+
 fn cli() -> Result<(), String> {
     let matches = App::new("doots")
         .arg(
@@ -24,7 +29,7 @@ fn cli() -> Result<(), String> {
                 .short("s")
                 .long("size")
                 .takes_value(true)
-                .default_value("10")
+                .default_value(SIZE_DEFAULT_STR)
                 .help(&dd("
                     How many boxes wide and tall the game is, ex:
                         size 1 => 1x1 grid => 4 dots
@@ -49,16 +54,34 @@ fn cli() -> Result<(), String> {
         )
         .get_matches();
 
-    let board_size: BoardSize = match matches.value_of("size").unwrap().trim().parse() {
-        Ok(int) => int,
-        Err(_) => 10,
+    let size_str = matches.value_of("size").unwrap().trim();
+    let board_size = match size_str.parse::<BoardSize>() {
+        Err(_) => {
+            eprintln!(
+                "Size {} doesn't make sense so I'm going to use {}.",
+                size_str, SIZE_DEFAULT
+            );
+            SIZE_DEFAULT
+        }
+        Ok(size_parsed) => {
+            if size_parsed < SIZE_MIN {
+                eprintln!(
+                    "{} squares is a bit small so I'm going to use {} instead.",
+                    size_parsed,
+                    &SIZE_DEFAULT.to_string()
+                );
+                SIZE_DEFAULT
+            } else if SIZE_MAX < size_parsed {
+                eprintln!(
+                    "{} squares? Ain't nobody got time for that! Let's just do {}",
+                    size_parsed, SIZE_MAX
+                );
+                SIZE_MAX
+            } else {
+                size_parsed
+            }
+        }
     };
-    if 100 < board_size {
-        return Err(format!(
-            "{} squares? Ain't nobody got time for that!",
-            board_size
-        ));
-    }
 
     let player_one = matches.value_of("player_one").unwrap().to_string();
     let player_two = matches.value_of("player_two").unwrap().to_string();
@@ -81,17 +104,19 @@ fn run_game(cli_opts: &CLIOpts) -> Result<(), String> {
     println!("{}", board.to_string());
 
     let players = choose(&cli_opts.player_one, &cli_opts.player_two);
-    let mut player_index = 0;
 
-    loop {
+    for turn in 0..(board.edge_count() as usize) {
+        let player_index = turn % players.len();
         let (player_id, player) = &players[player_index];
-        println!("Player ({:?})'s turn", player_id);
+        println!("Player {}'s turn", player_id);
 
+        // Note that the board clone is intentional as we don't want our
+        // players to have any way of mutating the offical board state.
         let player_edge = player.play(board.clone());
         match board.draw(player_edge) {
             Err(_) => {
                 return Err(format!(
-                    "Player {:?} ({}) attempted to play invalid move: {}",
+                    "Player {} ({}) attempted to draw an invalid edge: {}",
                     player_id,
                     player.name(),
                     player_edge,
@@ -99,14 +124,23 @@ fn run_game(cli_opts: &CLIOpts) -> Result<(), String> {
             }
             _ => {}
         };
+        println!("Player {} drew: {}", player_id, player_edge);
 
-        player_index = (player_index + 1) % players.len();
         println!("{}\n", board.to_string());
-
-        if board.is_full() {
-            break;
-        };
     }
+
+    print!(
+        "{}",
+        dd(&format!(
+            "
+            · ──────────────── ·
+            │ GAME OVER        │
+            │ Player {} wins! │
+            · ──────────────── ·
+            ",
+            "One"
+        ))
+    );
 
     Ok(())
 }
