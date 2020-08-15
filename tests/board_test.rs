@@ -90,7 +90,7 @@ fn test_edge_owner() {
 }
 
 #[test]
-fn test_box_owner_when_players_perfectly_alternate() {
+fn when_players_perfectly_alternate() {
     let mut board = Board::new(2);
     board
         .draw_many(vec![
@@ -108,7 +108,7 @@ mod test_box_owner {
     use super::*;
 
     #[test]
-    fn test_box_owner_when_both_players_diverge() {
+    fn when_both_players_diverge() {
         let mut board = Board::new(10);
         board
             .draw_many(vec![
@@ -128,7 +128,7 @@ mod test_box_owner {
     }
 
     #[test]
-    fn test_box_owner_when_one_player_diverges() {
+    fn when_one_player_diverges() {
         let mut board = Board::new(10);
         board
             .draw_many(vec![
@@ -147,139 +147,147 @@ mod test_box_owner {
     }
 }
 
-#[test]
-fn test_dot_chars_at_two_way_intersections() {
-    let mut board = Board::new(2);
-    board
-        .draw_many(vec![
-            edge((1, 1), (1, 2)),
-            edge((1, 1), (2, 1)),
-            edge((2, 2), (1, 2)),
-            edge((2, 2), (2, 1)),
-        ])
-        .expect("Draw failed");
+mod test_dot_chars {
+    use super::*;
 
-    assert_eq!('┌', board.choose_char(dot(1, 1)).value);
-    assert_eq!('└', board.choose_char(dot(2, 1)).value);
-    assert_eq!('┐', board.choose_char(dot(1, 2)).value);
-    assert_eq!('┘', board.choose_char(dot(2, 2)).value);
+    #[test]
+    fn at_two_way_intersections() {
+        let mut board = Board::new(2);
+        board
+            .draw_many(vec![
+                edge((1, 1), (1, 2)),
+                edge((1, 1), (2, 1)),
+                edge((2, 2), (1, 2)),
+                edge((2, 2), (2, 1)),
+            ])
+            .expect("Draw failed");
+
+        assert_eq!('┌', board.choose_char(dot(1, 1)).value);
+        assert_eq!('└', board.choose_char(dot(2, 1)).value);
+        assert_eq!('┐', board.choose_char(dot(1, 2)).value);
+        assert_eq!('┘', board.choose_char(dot(2, 2)).value);
+    }
+
+    #[test]
+    fn at_three_way_intersections() {
+        let mut board = Board::new(2);
+        board
+            .draw_many(vec![
+                edge((1, 1), (0, 1)),
+                edge((1, 1), (1, 2)),
+                edge((1, 1), (2, 1)),
+            ])
+            .expect("Draw failed");
+        assert_eq!('├', board.choose_char(dot(1, 1)).value);
+
+        board = Board::new(2);
+        board
+            .draw_many(vec![
+                edge((1, 1), (1, 2)),
+                edge((1, 1), (2, 1)),
+                edge((1, 1), (1, 0)),
+            ])
+            .expect("Draw failed");
+        assert_eq!('┬', board.choose_char(dot(1, 1)).value);
+
+        board = Board::new(2);
+        board
+            .draw_many(vec![
+                edge((1, 1), (0, 1)),
+                edge((1, 1), (2, 1)),
+                edge((1, 1), (1, 0)),
+            ])
+            .expect("Draw failed");
+        assert_eq!('┤', board.choose_char(dot(1, 1)).value);
+
+        board = Board::new(2);
+        board
+            .draw_many(vec![
+                edge((1, 1), (0, 1)),
+                edge((1, 1), (1, 2)),
+                edge((1, 1), (1, 0)),
+            ])
+            .expect("Draw failed");
+        assert_eq!('┴', board.choose_char(dot(1, 1)).value);
+    }
 }
 
-#[test]
-fn test_dot_chars_at_three_way_intersections() {
-    let mut board = Board::new(2);
-    board
-        .draw_many(vec![
-            edge((1, 1), (0, 1)),
-            edge((1, 1), (1, 2)),
-            edge((1, 1), (2, 1)),
-        ])
-        .expect("Draw failed");
-    assert_eq!('├', board.choose_char(dot(1, 1)).value);
+mod test_to_string {
+    use super::*;
 
-    board = Board::new(2);
-    board
-        .draw_many(vec![
-            edge((1, 1), (1, 2)),
-            edge((1, 1), (2, 1)),
-            edge((1, 1), (1, 0)),
-        ])
-        .expect("Draw failed");
-    assert_eq!('┬', board.choose_char(dot(1, 1)).value);
+    #[test]
+    fn empty_board() {
+        let board = Board::new(12);
 
-    board = Board::new(2);
-    board
-        .draw_many(vec![
-            edge((1, 1), (0, 1)),
-            edge((1, 1), (2, 1)),
-            edge((1, 1), (1, 0)),
-        ])
-        .expect("Draw failed");
-    assert_eq!('┤', board.choose_char(dot(1, 1)).value);
+        let expected = vec![
+            "   0  1  2  3  4  5  6  7  8  9  10 11 12 ",
+            " 0 ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
+            "                                          ",
+            " 1 ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
+            "                                          ",
+            " 2 ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
+            "                                          ",
+            " 3 ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
+            "                                          ",
+            " 4 ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
+            "                                          ",
+            " 5 ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
+            "                                          ",
+            " 6 ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
+            "                                          ",
+            " 7 ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
+            "                                          ",
+            " 8 ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
+            "                                          ",
+            " 9 ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
+            "                                          ",
+            " 10·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
+            "                                          ",
+            " 11·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
+            "                                          ",
+            " 12·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
+        ]
+        .join("\n");
 
-    board = Board::new(2);
-    board
-        .draw_many(vec![
-            edge((1, 1), (0, 1)),
-            edge((1, 1), (1, 2)),
-            edge((1, 1), (1, 0)),
-        ])
-        .expect("Draw failed");
-    assert_eq!('┴', board.choose_char(dot(1, 1)).value);
-}
+        let result = board.to_string();
 
-#[test]
-fn test_to_string_empty_board() {
-    let board = Board::new(12);
+        assert_eq!(
+            expected,
+            result,
+            "\n{}",
+            vec!["Expected:", &expected, "Received:", &result].join("\n")
+        );
+    }
 
-    let expected = vec![
-        "   0  1  2  3  4  5  6  7  8  9  10 11 12 ",
-        " 0 ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
-        "                                          ",
-        " 1 ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
-        "                                          ",
-        " 2 ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
-        "                                          ",
-        " 3 ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
-        "                                          ",
-        " 4 ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
-        "                                          ",
-        " 5 ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
-        "                                          ",
-        " 6 ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
-        "                                          ",
-        " 7 ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
-        "                                          ",
-        " 8 ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
-        "                                          ",
-        " 9 ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
-        "                                          ",
-        " 10·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
-        "                                          ",
-        " 11·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
-        "                                          ",
-        " 12·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ",
-    ]
-    .join("\n");
+    #[test]
+    fn with_filled_square() {
+        let mut board = Board::new(2);
+        board
+            .draw_many(vec![
+                edge((1, 1), (1, 2)),
+                edge((1, 1), (2, 1)),
+                edge((1, 2), (2, 2)),
+                edge((2, 1), (2, 2)),
+            ])
+            .expect("Draw failed");
 
-    let result = board.to_string();
+        let expected = vec![
+            "   0  1  2  ",
+            " 0 ·  ·  ·  ",
+            "            ",
+            " 1 ·  ┌──┐  ",
+            "      │2 │  ",
+            " 2 ·  └──┘  ",
+        ]
+        .join("\n");
 
-    assert_eq!(
-        expected,
-        result,
-        "\n{}",
-        vec!["Expected:", &expected, "Received:", &result].join("\n")
-    );
-}
+        let result = board.to_string();
 
-#[test]
-fn test_to_string_with_filled_square() {
-    let mut board = Board::new(2);
-    board
-        .draw_many(vec![
-            edge((1, 1), (1, 2)),
-            edge((1, 1), (2, 1)),
-            edge((1, 2), (2, 2)),
-            edge((2, 1), (2, 2)),
-        ])
-        .expect("Draw failed");
-
-    let expected = vec![
-        "   0  1  2  ",
-        " 0 ·  ·  ·  ",
-        "            ",
-        " 1 ·  ┌──┐  ",
-        "      │2 │  ",
-        " 2 ·  └──┘  ",
-    ]
-    .join("\n");
-
-    let result = board.to_string();
-
-    assert_eq!(
-        expected,
-        result,
-        "\n{}",
-        vec!["Expected:", &expected, "Received:", &result].join("\n")
-    );
+        assert_eq!(
+            expected,
+            result,
+            "\n{}",
+            vec!["Expected:", &expected, "Received:", &result].join("\n")
+        );
+    }
 }

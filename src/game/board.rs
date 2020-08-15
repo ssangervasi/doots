@@ -223,6 +223,9 @@ impl Board {
             .collect()
     }
 
+    /*
+     * One chonky func!
+     */
     pub fn to_string(&self) -> String {
         let cell_width = 3;
         let dot_size = self.dot_size();
@@ -241,8 +244,9 @@ impl Board {
             let mut fill_row_string = pad_out("", " ", cell_width);
 
             for col in 0..dot_size {
+                let cell_dot = dot(row, col);
                 // Pick the appropriate box intersection:
-                let entry = self.choose_char(dot(row, col));
+                let entry = self.choose_char(cell_dot);
 
                 // Extend right to account for horizontal space:
                 let spacer_h = if entry.right { LINE_H } else { ' ' };
@@ -252,9 +256,15 @@ impl Board {
                     cell_width,
                 ));
 
-                // Extend down for fill-in row:
+                // Extend down for left edge of filled box:
                 let spacer_v = if entry.down { LINE_V } else { ' ' };
-                fill_row_string.push_str(&pad_end(&spacer_v.to_string(), " ", cell_width))
+                // Fill in owner symbol for owned box:
+                let owner_char = self.choose_owner_char(cell_dot);
+                fill_row_string.push_str(&pad_end(
+                    &format!("{}{}", spacer_v, owner_char),
+                    " ",
+                    cell_width,
+                ))
             }
             grid.push(dot_row_string);
             grid.push(fill_row_string);
@@ -281,5 +291,13 @@ impl Board {
             }
         }
         lookup(box_char)
+    }
+
+    pub fn choose_owner_char(&self, dot: Dot) -> char {
+        match self.box_owner(dot) {
+            Some(PlayerId::One) => '1',
+            Some(PlayerId::Two) => '2',
+            None => ' ',
+        }
     }
 }
