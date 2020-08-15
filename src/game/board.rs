@@ -154,44 +154,6 @@ impl Board {
     }
 
     pub fn to_string(&self) -> String {
-        let mut grid: Vec<String> = Vec::new();
-
-        // Header row
-        let mut row_string = String::new();
-        row_string.push_str(" ");
-        for col in 0..self.dot_size() {
-            row_string.push_str(&format!(" {:2}", col));
-        }
-        grid.push(row_string);
-
-        for row in 0..self.dot_size() {
-            let mut row_string = String::new();
-            for col in 0..self.dot_size() {
-                // Left column
-                if col == 0 {
-                    row_string.push_str(&format!("{:2} ", row));
-                }
-
-                // Pick the appropriate box intersection:
-                let entry = self.choose_char(dot(row, col));
-                row_string.push(entry.value);
-
-                // Extend right to account for horizontal space:
-                let spacer = if entry.right {
-                    LINE_H.to_string().repeat(2)
-                } else if col + 1 < self.dot_size() {
-                    "  ".to_string()
-                } else {
-                    "".to_string()
-                };
-                row_string.push_str(&spacer);
-            }
-            grid.push(row_string);
-        }
-        grid.join("\n")
-    }
-
-    pub fn to_string_with_fill(&self) -> String {
         let cell_width = 3;
         let dot_size = self.dot_size();
         let mut grid: Vec<String> = Vec::new();
