@@ -1,12 +1,14 @@
-pub use crate::game::basic_types::{dot, edge, BoardSize, Dot, Edge};
+pub use crate::game::basic_types::{dot, edge, BoardSize, Dot, DotBox, Edge};
 use crate::game::box_drawings::{lookup, BoxChar, LINE_H, LINE_V};
 use crate::players::player::PlayerId;
+use crate::utils::{pad_end, pad_out};
 
 #[derive(Clone, Debug)]
 pub struct Board {
-    pub size: BoardSize,
-    pub edges: Vec<Edge>,
-    pub player_ids: Vec<PlayerId>,
+    size: BoardSize,
+    /* Edges are kept in the order they were drawn. */
+    edges: Vec<Edge>,
+    player_ids: Vec<PlayerId>,
 }
 
 impl Default for Board {
@@ -25,6 +27,10 @@ impl Board {
             size,
             ..Default::default()
         }
+    }
+
+    pub fn size(&self) -> BoardSize {
+        self.size
     }
 
     /* The number of dots in a row (equal to column) */
@@ -101,13 +107,56 @@ impl Board {
         !self.is_free(edge)
     }
 
+    /*
+     * Which PlayerId drew the edge. At the moment, the owner methods are all
+     * O(n) where n = number of edges drawn. This could be sped up by storing
+     * owner information at draw time.
+     */
     pub fn edge_owner(&self, edge: Edge) -> Option<PlayerId> {
+        let indexes = self.indexes_of(vec![edge]);
+        if indexes.len() < 1 {
+            return None;
+        }
+        self.edge_index_owner(indexes[0])
+    }
+
+    fn edge_index_owner(&self, edge_index: usize) -> Option<PlayerId> {
+        if self.edges.len() <= edge_index {
+            return None;
+        }
+        let player_index = edge_index % self.player_ids.len();
+        Some(self.player_ids[player_index])
+    }
+
+    fn indexes_of(&self, edges_to_find: Vec<Edge>) -> Vec<usize> {
+        let mut found: Vec<usize> = vec![];
         for (i, &drawn_edge) in self.edges.iter().enumerate() {
-            if drawn_edge == edge {
-                return Some(self.player_ids[i % self.player_ids.len()]);
+            for &to_find in edges_to_find.iter() {
+                if drawn_edge == to_find {
+                    found.push(i)
+                }
+            }
+            if found.len() == edges_to_find.len() {
+                break;
             }
         }
-        None
+        found
+    }
+
+    /*
+     * Who owns a drawn box. Boxes are always identified by their upper-left corner,
+     * so this method returns None if:
+     *  - Fewer than 4 edges are drawn to complete the box,
+     *  - Or the specified dot does not match a box corner: it is on the right
+     *    or bottom edge.
+     */
+    pub fn box_owner(&self, corner: Dot) -> Option<PlayerId> {
+        let dot_box = DotBox(corner);
+        let indexes = self.indexes_of(dot_box.edges());
+        if indexes.len() < 4 {
+            return None;
+        }
+        self.edge_index_owner(indexes[3])
     }
 
     /* Whether the dot fits in this board. */
@@ -233,43 +282,4 @@ impl Board {
         }
         lookup(box_char)
     }
-}
-
-pub fn pad_end(unpadded: &str, fill: &str, width: usize) -> String {
-    let char_len = unpadded.chars().count();
-    if width <= char_len {
-        return unpadded.to_string();
-    }
-    let mut right = String::new();
-    let mut fill_chars: Vec<char> = fill.chars().collect();
-    if fill_chars.len() < 1 {
-        fill_chars.push(' ');
-    }
-    for i in 0..(width - char_len) {
-        let fill_index = i % fill_chars.len();
-        right.push(fill_chars[fill_index]);
-    }
-    format!("{}{}", unpadded, right)
-}
-
-pub fn pad_out(unpadded: &str, fill: &str, width: usize) -> String {
-    let char_len = unpadded.chars().count();
-    if width <= char_len {
-        return unpadded.to_string();
-    }
-    let mut left = String::new();
-    let mut right = String::new();
-    let mut fill_chars: Vec<char> = fill.chars().collect();
-    if fill_chars.len() < 1 {
-        fill_chars.push(' ');
-    }
-    for i in 0..(width - char_len) {
-        let fill_index = i % fill_chars.len();
-        if i % 2 == 0 {
-            left.push(fill_chars[fill_index]);
-        } else {
-            right.push(fill_chars[fill_index]);
-        }
-    }
-    format!("{}{}{}", left, unpadded, right)
 }

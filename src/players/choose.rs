@@ -21,15 +21,3 @@ pub fn choose(one: &String, two: &String) -> Vec<(PlayerId, Box<dyn Player>)> {
     }
     players
 }
-
-// pub fn fill(one: &str, two: &str, mut players: Vec<&dyn Player>) {
-//     if one != two {
-//         panic!("oh no");
-//     }
-//     let p1 = Hoomin::one();
-//     let p2 = Hoomin::two();
-//     // let b = Box::new(p1);
-//     // vec![Box::new(p1), Box::new(p2)];
-//     players[0] = &p1;
-//     players[1] = &p2;
-// }

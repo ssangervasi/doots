@@ -74,7 +74,7 @@ fn run_game(cli_opts: &CLIOpts) -> Result<(), String> {
     let mut board = Board::new(cli_opts.board_size);
     println!(
         "Game with {} squares ({}x{} dots)",
-        board.size,
+        board.size(),
         board.dot_size(),
         board.dot_size()
     );

@@ -1,5 +1,5 @@
 use doots::game::board::{dot, edge, Board};
-use doots::game::board::{pad_end, pad_out};
+use doots::players::player::PlayerId;
 
 #[test]
 fn it_calculates_dot_count() {
@@ -61,6 +61,36 @@ fn test_iter_edges() {
 }
 
 #[test]
+fn test_edge_owner() {
+    let mut board = Board::new(2);
+    board
+        .draw_many(vec![
+            edge((1, 1), (1, 2)),
+            edge((1, 1), (2, 1)),
+            edge((2, 2), (1, 2)),
+            edge((2, 2), (2, 1)),
+        ])
+        .expect("Draw failed");
+
+    assert_eq!(
+        PlayerId::One,
+        board.edge_owner(edge((1, 1), (1, 2))).unwrap()
+    );
+    assert_eq!(
+        PlayerId::One,
+        board.edge_owner(edge((2, 2), (1, 2))).unwrap()
+    );
+    assert_eq!(
+        PlayerId::Two,
+        board.edge_owner(edge((1, 1), (2, 1))).unwrap()
+    );
+    assert_eq!(
+        PlayerId::Two,
+        board.edge_owner(edge((2, 2), (2, 1))).unwrap()
+    );
+}
+
+#[test]
 fn test_dot_chars_at_two_way_intersections() {
     let mut board = Board::new(2);
     board
@@ -119,27 +149,6 @@ fn test_dot_chars_at_three_way_intersections() {
         ])
         .expect("Draw failed");
     assert_eq!('┴', board.choose_char(dot(1, 1)).value);
-}
-
-#[test]
-fn test_pad_end() {
-    assert_eq!("012", pad_end("012", " ", 3));
-    assert_eq!("012  ", pad_end("012", " ", 5));
-    assert_eq!("012  ", pad_end("012", "", 5));
-    assert_eq!("012--", pad_end("012", "-", 5));
-    assert_eq!("01234", pad_end("012", "34", 5));
-    assert_eq!("012343", pad_end("012", "34", 6));
-}
-
-#[test]
-fn test_pad_out() {
-    assert_eq!("012", pad_out("012", " ", 0));
-    assert_eq!("012", pad_out("012", " ", 3));
-    assert_eq!(" 012 ", pad_out("012", " ", 5));
-    assert_eq!(" 012 ", pad_out("012", "", 5));
-    assert_eq!("-012-", pad_out("012", "-", 5));
-    assert_eq!("30124", pad_out("012", "34", 5));
-    assert_eq!("330124", pad_out("012", "34", 6));
 }
 
 #[test]

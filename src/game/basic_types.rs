@@ -86,3 +86,50 @@ impl PartialEq for Edge {
 pub fn edge((r1, c1): (BoardSize, BoardSize), (r2, c2): (BoardSize, BoardSize)) -> Edge {
     Edge(dot(r1, c1), dot(r2, c2))
 }
+
+#[derive(Default, Copy, Clone, Debug, Eq)]
+pub struct DotBox(pub Dot);
+
+impl PartialEq for DotBox {
+    fn eq(&self, other: &Self) -> bool {
+        self.upper_left() == other.upper_left()
+    }
+}
+
+impl DotBox {
+    pub fn upper_left(&self) -> Dot {
+        self.0
+    }
+
+    pub fn upper_right(&self) -> Dot {
+        self.upper_left() + dot(0, 1)
+    }
+
+    pub fn lower_right(&self) -> Dot {
+        self.upper_left() + dot(1, 1)
+    }
+
+    pub fn lower_left(&self) -> Dot {
+        self.upper_left() + dot(1, 0)
+    }
+
+    pub fn top(&self) -> Edge {
+        Edge(self.upper_left(), self.upper_right())
+    }
+
+    pub fn right(&self) -> Edge {
+        Edge(self.upper_right(), self.lower_right())
+    }
+
+    pub fn bottom(&self) -> Edge {
+        Edge(self.lower_left(), self.lower_right())
+    }
+
+    pub fn left(&self) -> Edge {
+        Edge(self.upper_left(), self.lower_left())
+    }
+
+    pub fn edges(&self) -> Vec<Edge> {
+        vec![self.top(), self.right(), self.bottom(), self.left()]
+    }
+}
