@@ -1,4 +1,5 @@
 use doots::game::board::{dot, edge, Board};
+use doots::game::board::{pad_end, pad_out};
 
 #[test]
 fn it_calculates_dot_count() {
@@ -134,13 +135,66 @@ fn test_to_string() {
 
     #[rustfmt::skip]
     let expected = vec![
-  	  "   0  1  2 ",
+  	  "   0  1  2",
 	  " 0 ·  ·  ·",
 	  " 1 ·  ┌──┐",
 	  " 2 ·  └──┘",
 	].join("\n");
 
     let result = board.to_string();
+
+    assert_eq!(
+        expected,
+        result,
+        "\n{}",
+        vec!["Expected:", &expected, "Received:", &result].join("\n")
+    );
+}
+
+#[test]
+fn test_pad_end() {
+    assert_eq!("012", pad_end("012", " ", 3));
+    assert_eq!("012  ", pad_end("012", " ", 5));
+    assert_eq!("012  ", pad_end("012", "", 5));
+    assert_eq!("012--", pad_end("012", "-", 5));
+    assert_eq!("01234", pad_end("012", "34", 5));
+    assert_eq!("012343", pad_end("012", "34", 6));
+}
+
+#[test]
+fn test_pad_out() {
+    assert_eq!("012", pad_out("012", " ", 0));
+    assert_eq!("012", pad_out("012", " ", 3));
+    assert_eq!(" 012 ", pad_out("012", " ", 5));
+    assert_eq!(" 012 ", pad_out("012", "", 5));
+    assert_eq!("-012-", pad_out("012", "-", 5));
+    assert_eq!("30124", pad_out("012", "34", 5));
+    assert_eq!("330124", pad_out("012", "34", 6));
+}
+
+#[test]
+fn test_to_string_with_fill() {
+    let mut board = Board::new(2);
+    board
+        .draw_many(vec![
+            edge((1, 1), (1, 2)),
+            edge((1, 1), (2, 1)),
+            edge((1, 2), (2, 2)),
+            edge((2, 1), (2, 2)),
+        ])
+        .expect("Draw failed");
+
+    #[rustfmt::skip]
+    let expected = vec![
+      "   0  1  2  ",
+      " 0 ·  ·  ·  ",
+      "            ",
+      " 1 ·  ┌──┐  ",
+      "      │  │  ",
+      " 2 ·  └──┘  ",
+    ].join("\n");
+
+    let result = board.to_string_with_fill();
 
     assert_eq!(
         expected,

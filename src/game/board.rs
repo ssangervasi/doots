@@ -1,5 +1,5 @@
 pub use crate::game::basic_types::{dot, edge, BoardSize, Dot, Edge};
-use crate::game::box_drawings::{lookup, BoxChar, LINE_H};
+use crate::game::box_drawings::{lookup, BoxChar, LINE_H, LINE_V};
 
 #[derive(Default, Clone, Debug)]
 pub struct Board {
@@ -154,37 +154,83 @@ impl Board {
     }
 
     pub fn to_string(&self) -> String {
-        let mut grid = String::new();
-        for row in 0..=self.dot_size() {
-            for col in 0..=self.dot_size() {
-                // Handle header row and left column:
-                if row == 0 && col == 0 {
-                    grid.push_str("  ");
-                    continue;
-                } else if row == 0 {
-                    grid.push_str(&format!("{:2} ", col - 1));
-                    continue;
-                } else if col == 0 {
-                    grid.push_str(&format!("\n{:2} ", row - 1));
-                    continue;
+        let mut grid: Vec<String> = Vec::new();
+
+        // Header row
+        let mut row_string = String::new();
+        row_string.push_str(" ");
+        for col in 0..self.dot_size() {
+            row_string.push_str(&format!(" {:2}", col));
+        }
+        grid.push(row_string);
+
+        for row in 0..self.dot_size() {
+            let mut row_string = String::new();
+            for col in 0..self.dot_size() {
+                // Left column
+                if col == 0 {
+                    row_string.push_str(&format!("{:2} ", row));
                 }
 
-                // Othwerwise, pick the appropriate box intersection:
-                let entry = self.choose_char(dot(row - 1, col - 1));
-                grid.push(entry.value);
+                // Pick the appropriate box intersection:
+                let entry = self.choose_char(dot(row, col));
+                row_string.push(entry.value);
 
                 // Extend right to account for horizontal space:
                 let spacer = if entry.right {
                     LINE_H.to_string().repeat(2)
-                } else if col != self.dot_size() {
+                } else if col + 1 < self.dot_size() {
                     "  ".to_string()
                 } else {
                     "".to_string()
                 };
-                grid.push_str(&spacer)
+                row_string.push_str(&spacer);
             }
+            grid.push(row_string);
         }
-        grid
+        grid.join("\n")
+    }
+
+    pub fn to_string_with_fill(&self) -> String {
+        let cell_width = 3;
+        let dot_size = self.dot_size();
+        let mut grid: Vec<String> = Vec::new();
+
+        // Header guide row:
+        let mut row_string = " ".repeat(cell_width);
+        for col in 0..dot_size {
+            row_string.push_str(&pad_end(&col.to_string(), " ", cell_width));
+        }
+        grid.push(row_string);
+
+        for row in 0..dot_size {
+            // Left guide column:
+            let mut dot_row_string = pad_out(&row.to_string(), " ", cell_width);
+            let mut fill_row_string = pad_out("", " ", cell_width);
+
+            for col in 0..dot_size {
+                // Pick the appropriate box intersection:
+                let entry = self.choose_char(dot(row, col));
+
+                // Extend right to account for horizontal space:
+                let spacer_h = if entry.right { LINE_H } else { ' ' };
+                dot_row_string.push_str(&pad_end(
+                    &entry.value.to_string(),
+                    &spacer_h.to_string(),
+                    cell_width,
+                ));
+
+                // Extend down for fill-in row:
+                let spacer_v = if entry.down { LINE_V } else { ' ' };
+                fill_row_string.push_str(&pad_end(&spacer_v.to_string(), " ", cell_width))
+            }
+            grid.push(dot_row_string);
+            grid.push(fill_row_string);
+        }
+        // Dropping the extra is easier than checking the edges.
+        grid.pop();
+
+        grid.join("\n")
     }
 
     pub fn choose_char(&self, dot: Dot) -> BoxChar {
@@ -204,4 +250,43 @@ impl Board {
         }
         lookup(box_char)
     }
+}
+
+pub fn pad_end(unpadded: &str, fill: &str, width: usize) -> String {
+    let char_len = unpadded.chars().count();
+    if width <= char_len {
+        return unpadded.to_string();
+    }
+    let mut right = String::new();
+    let mut fill_chars: Vec<char> = fill.chars().collect();
+    if fill_chars.len() < 1 {
+        fill_chars.push(' ');
+    }
+    for i in 0..(width - char_len) {
+        let fill_index = i % fill_chars.len();
+        right.push(fill_chars[fill_index]);
+    }
+    format!("{}{}", unpadded, right)
+}
+
+pub fn pad_out(unpadded: &str, fill: &str, width: usize) -> String {
+    let char_len = unpadded.chars().count();
+    if width <= char_len {
+        return unpadded.to_string();
+    }
+    let mut left = String::new();
+    let mut right = String::new();
+    let mut fill_chars: Vec<char> = fill.chars().collect();
+    if fill_chars.len() < 1 {
+        fill_chars.push(' ');
+    }
+    for i in 0..(width - char_len) {
+        let fill_index = i % fill_chars.len();
+        if i % 2 == 0 {
+            left.push(fill_chars[fill_index]);
+        } else {
+            right.push(fill_chars[fill_index]);
+        }
+    }
+    format!("{}{}{}", left, unpadded, right)
 }
