@@ -18,3 +18,6 @@ Hello, world!
 
 Code formatting with RustFmt is good:
 https://github.com/rust-lang/rustfmt#running-rustfmt-from-your-editor
+
+Nicer assertions:
+https://docs.rs/spectral/0.6.0/spectral/?search=equal

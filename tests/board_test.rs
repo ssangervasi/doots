@@ -1,10 +1,13 @@
+use spectral::assert_that;
+use spectral::boolean::BooleanAssertions;
+
 use doots::game::board::{dot, edge, Board};
 use doots::players::player::PlayerId;
 
 #[test]
 fn it_calculates_dot_count() {
     let board = Board::new(2);
-    assert_eq!(9, board.dot_count())
+    assert_that!(board.dot_count()).is_equal_to(9);
 }
 
 #[test]
@@ -12,9 +15,9 @@ fn test_is_free() {
     let mut board = Board::new(2);
     board.draw(edge((0, 0), (0, 1))).expect("Draw failed!");
 
-    assert_eq!(true, board.is_free(edge((0, 0), (1, 0))));
-    assert_eq!(false, board.is_free(edge((0, 0), (0, 1))));
-    assert_eq!(false, board.is_free(edge((0, 1), (0, 0))));
+    assert_that!(board.is_free(edge((0, 0), (1, 0)))).is_true();
+    assert_that!(board.is_free(edge((0, 0), (0, 1)))).is_false();
+    assert_that!(board.is_free(edge((0, 1), (0, 0)))).is_false();
 }
 
 #[test]
