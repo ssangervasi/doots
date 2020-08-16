@@ -120,13 +120,9 @@ fn run_game(cli_opts: &CLIOpts) -> Result<(), String> {
         .join("\n")
     );
 
-    // println!(
-    //     "Game with {} squares ({}x{} dots)",
-    //     board.size(),
-    //     board.dot_size(),
-    //     board.dot_size()
-    // );
-
+    // I'm being pretty zealos about not using the player struct's Id in order
+    // to prevent a player implementation from lying about where it actually
+    // falls in the turn order.
     let players = choose(&cli_opts.player_one, &cli_opts.player_two);
 
     for turn in 0..(board.edge_count() as usize) {

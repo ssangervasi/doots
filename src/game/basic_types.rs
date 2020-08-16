@@ -146,7 +146,16 @@ impl PartialEq for WinnerResult {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Self::Winner(id_a, c_a), Self::Winner(id_b, c_b)) => id_a == id_b && c_a == c_b,
-            (Self::Tie(ids_a, c_a), Self::Tie(ids_b, c_b)) => ids_a == ids_b && c_a == c_b,
+            (Self::Tie(ids_a, c_a), Self::Tie(ids_b, c_b)) => {
+                c_a == c_b && {
+                    // 😬
+                    let mut sids_a = ids_a.clone();
+                    let mut sids_b = ids_b.clone();
+                    sids_a.sort();
+                    sids_b.sort();
+                    sids_a == sids_b
+                }
+            }
             (Self::None, Self::None) => true,
             _ => false,
         }
