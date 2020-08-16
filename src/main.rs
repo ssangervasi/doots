@@ -3,6 +3,7 @@ use textwrap::dedent as dd;
 
 use doots::game::board::{Board, BoardSize, WinnerResult};
 use doots::players::choose::choose;
+use doots::utils::{pad_end, pad_out};
 
 fn main() {
     match cli() {
@@ -95,17 +96,42 @@ fn cli() -> Result<(), String> {
 
 fn run_game(cli_opts: &CLIOpts) -> Result<(), String> {
     let mut board = Board::new(cli_opts.board_size);
-    println!(
-        "Game with {} squares ({}x{} dots)",
-        board.size(),
-        board.dot_size(),
-        board.dot_size()
+
+    print!(
+        "{}",
+        vec![
+            format!("· {} ·", pad_end("", "─", 40)),
+            format!("│ {} │", pad_out("Doots & Booxes", " ", 40)),
+            format!(
+                "│ {} │",
+                pad_out(
+                    &format!(
+                        "Playing with {} squares ({}x{} dots)",
+                        board.size(),
+                        board.dot_size(),
+                        board.dot_size()
+                    ),
+                    " ",
+                    40
+                )
+            ),
+            format!("· {} ·", pad_end("", "─", 40)),
+        ]
+        .join("\n")
     );
-    println!("{}", board.to_string());
+
+    // println!(
+    //     "Game with {} squares ({}x{} dots)",
+    //     board.size(),
+    //     board.dot_size(),
+    //     board.dot_size()
+    // );
 
     let players = choose(&cli_opts.player_one, &cli_opts.player_two);
 
     for turn in 0..(board.edge_count() as usize) {
+        print!("\n\n{}\n\n", board.to_string());
+
         let player_index = turn % players.len();
         let (player_id, player) = &players[player_index];
         println!("Player {}'s turn", player_id);
@@ -125,24 +151,36 @@ fn run_game(cli_opts: &CLIOpts) -> Result<(), String> {
             _ => {}
         };
         println!("Player {} drew: {}", player_id, player_edge);
-
-        println!("{}\n", board.to_string());
     }
+
+    print!("\n\n{}\n\n", board.to_string());
+
+    let winner_message = match board.winner() {
+        WinnerResult::Winner(winner_id, winner_count) => {
+            let (_, winner) = players.iter().find(|(id, _)| *id == winner_id).unwrap();
+            format!(
+                "Player {} ({}) wins with {} boxes!",
+                winner_id,
+                winner.name(),
+                winner_count
+            )
+        }
+        WinnerResult::Tie(tied_ids, tied_count) => format!(
+            "A tie between {:?} with {} boxes each.",
+            tied_ids, tied_count
+        ),
+        WinnerResult::None => "I think something went wrong...".to_string(),
+    };
 
     print!(
         "{}",
-        dd(&format!(
-            "
-            · ──────────────── ·
-            │ GAME OVER        │
-            │ Player {} wins! │
-            · ──────────────── ·
-            ",
-            match board.winner() {
-                WinnerResult::Winner(_, _) => "somebody",
-                _ => "nobody",
-            }
-        ))
+        vec![
+            format!("· {} ·", pad_end("", "─", winner_message.len())),
+            format!("│ {} │", pad_out("GAME OVER", " ", winner_message.len())),
+            format!("│ {} │", winner_message),
+            format!("· {} ·", pad_end("", "─", winner_message.len())),
+        ]
+        .join("\n")
     );
 
     Ok(())
