@@ -1,4 +1,6 @@
-pub use crate::game::basic_types::{dot, edge, BoardSize, Dot, DotBox, Edge};
+use std::collections::HashMap;
+
+pub use crate::game::basic_types::{dot, edge, BoardSize, Dot, DotBox, Edge, WinnerResult};
 use crate::game::box_drawings::{lookup, BoxChar, LINE_H, LINE_V};
 use crate::players::player::PlayerId;
 use crate::utils::{pad_end, pad_out};
@@ -53,6 +55,9 @@ impl Board {
         2 * self.size * self.dot_size()
     }
 
+    /*
+     * Whether all edges have been drawn and the game should be over.
+     */
     pub fn is_full(&self) -> bool {
         (self.edge_count() as usize) <= self.edges.len()
     }
@@ -159,6 +164,49 @@ impl Board {
         self.edge_index_owner(*indexes.last().unwrap())
     }
 
+    pub fn owner_to_boxes(&self) -> HashMap<PlayerId, Vec<DotBox>> {
+        let mut hash: HashMap<PlayerId, Vec<DotBox>> = HashMap::new();
+        for &player_id in self.player_ids.iter() {
+            hash.insert(player_id, vec![]);
+        }
+        for dotbox in self.iter_boxes() {
+            match self.box_owner(dotbox.0) {
+                Some(owner_id) => hash.get_mut(&owner_id).unwrap().push(dotbox),
+                None => {}
+            }
+        }
+        hash
+    }
+
+    pub fn winner(&self) -> WinnerResult {
+        println!("DEBUG\n{:?}", self.edges);
+
+        if !self.is_full() {
+            return WinnerResult::None;
+        }
+
+        let counts: Vec<(PlayerId, usize)> = self
+            .owner_to_boxes()
+            .iter()
+            .map(|(&id, boxes)| (id, boxes.len()))
+            .collect();
+
+        let winning_count = *counts.iter().map(|(_, count)| count).max().unwrap();
+        let mut winners: Vec<PlayerId> = vec![];
+        for &(id, count) in counts.iter() {
+            if count == winning_count {
+                winners.push(id);
+            }
+        }
+        if winners.len() == 0 {
+            return WinnerResult::None;
+        } else if winners.len() == 1 {
+            WinnerResult::Winner(winners[0], winning_count)
+        } else {
+            WinnerResult::Tie(winners, winning_count)
+        }
+    }
+
     /* Whether the dot fits in this board. */
     pub fn dot_fits(&self, Dot { row, col }: Dot) -> bool {
         // Note that comparison to zero is unnecessary due to
@@ -202,6 +250,15 @@ impl Board {
         })
     }
 
+    pub fn iter_boxes(&self) -> impl Iterator<Item = DotBox> {
+        let max_dot_index = self.dot_size() - 1;
+        self.iter_dots()
+            // Exlude right and bottom dots:
+            .filter(move |d| d.row < max_dot_index && d.col < max_dot_index)
+            // Wrap the valid dots into boxes:
+            .map(|d| DotBox(d))
+    }
+
     /**
      * O(n). Should be able to make this O(1) by mapping...
      */
@@ -229,7 +286,7 @@ impl Board {
     pub fn to_string(&self) -> String {
         let cell_width = 3;
         let dot_size = self.dot_size();
-        let mut grid: Vec<String> = Vec::new();
+        let mut grid: Vec<String> = vec![];
 
         // Header guide row:
         let mut row_string = " ".repeat(cell_width);

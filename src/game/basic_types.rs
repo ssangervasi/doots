@@ -2,6 +2,7 @@ use core::fmt;
 use std::ops;
 
 use crate::game::box_drawings::{DOT, LINE_H};
+use crate::players::player::PlayerId;
 
 pub type BoardSize = u16;
 
@@ -131,5 +132,23 @@ impl DotBox {
 
     pub fn edges(&self) -> Vec<Edge> {
         vec![self.top(), self.right(), self.bottom(), self.left()]
+    }
+}
+
+#[derive(Clone, Debug, Eq)]
+pub enum WinnerResult {
+    Winner(PlayerId, usize),
+    Tie(Vec<PlayerId>, usize),
+    None,
+}
+
+impl PartialEq for WinnerResult {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Winner(id_a, c_a), Self::Winner(id_b, c_b)) => id_a == id_b && c_a == c_b,
+            (Self::Tie(ids_a, c_a), Self::Tie(ids_b, c_b)) => ids_a == ids_b && c_a == c_b,
+            (Self::None, Self::None) => true,
+            _ => false,
+        }
     }
 }

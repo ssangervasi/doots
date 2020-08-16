@@ -1,7 +1,7 @@
 use clap::{App, Arg};
 use textwrap::dedent as dd;
 
-use doots::game::board::{Board, BoardSize};
+use doots::game::board::{Board, BoardSize, WinnerResult};
 use doots::players::choose::choose;
 
 fn main() {
@@ -138,7 +138,10 @@ fn run_game(cli_opts: &CLIOpts) -> Result<(), String> {
             │ Player {} wins! │
             · ──────────────── ·
             ",
-            "One"
+            match board.winner() {
+                WinnerResult::Winner(_, _) => "somebody",
+                _ => "nobody",
+            }
         ))
     );
 

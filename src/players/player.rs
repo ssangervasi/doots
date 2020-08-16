@@ -7,7 +7,7 @@ pub trait Player {
     fn play(&self, board: Board) -> Edge;
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 #[repr(u8)]
 pub enum PlayerId {
     One = 1,
