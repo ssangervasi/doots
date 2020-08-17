@@ -5,11 +5,13 @@ use crate::game::box_drawings::{lookup, BoxChar, LINE_H, LINE_V};
 use crate::players::player::PlayerId;
 use crate::utils::{pad_end, pad_out};
 
+type OwnedEdge = (PlayerId, Edge);
+
 #[derive(Clone, Debug)]
 pub struct Board {
     size: BoardSize,
     /* Edges are kept in the order they were drawn. */
-    edges: Vec<Edge>,
+    owned_edges: Vec<OwnedEdge>,
     player_ids: Vec<PlayerId>,
 }
 
@@ -17,7 +19,7 @@ impl Default for Board {
     fn default() -> Self {
         Self {
             size: 2,
-            edges: vec![],
+            owned_edges: vec![],
             player_ids: vec![PlayerId::One, PlayerId::Two],
         }
     }
@@ -59,28 +61,27 @@ impl Board {
      * Whether all edges have been drawn and the game should be over.
      */
     pub fn is_full(&self) -> bool {
-        (self.edge_count() as usize) <= self.edges.len()
+        (self.edge_count() as usize) <= self.owned_edges.len()
     }
 
-    pub fn draw(&mut self, edge: Edge) -> Result<Edge, String> {
+    pub fn draw(&mut self, (owner, edge): OwnedEdge) -> Result<Edge, String> {
         let validation = self.validate_draw(edge);
         if validation.is_ok() {
-            self.edges.push(edge);
+            self.owned_edges.push((owner, edge));
         }
         validation
     }
 
-    pub fn draw_many(&mut self, edges: Vec<Edge>) -> Result<BoardSize, String> {
+    pub fn draw_many(&mut self, owned_edges: Vec<OwnedEdge>) -> Result<BoardSize, String> {
         let mut success_count = 0;
-        for edge in &edges {
-            let validation = self.validate_draw(*edge);
-            if validation.is_err() {
-                return Err(validation.unwrap_err());
-            }
-            success_count += 1
+        for &(_, edge) in &owned_edges {
+            match self.validate_draw(edge) {
+                Ok(_) => success_count += 1,
+                Err(msg) => return Err(msg),
+            };
         }
-        for edge in edges {
-            self.edges.push(edge);
+        for &owned_edge in &owned_edges {
+            self.owned_edges.push(owned_edge);
         }
         Ok(success_count)
     }
@@ -126,16 +127,15 @@ impl Board {
     }
 
     fn edge_index_owner(&self, edge_index: usize) -> Option<PlayerId> {
-        if self.edges.len() <= edge_index {
+        if self.owned_edges.len() <= edge_index {
             return None;
         }
-        let player_index = edge_index % self.player_ids.len();
-        Some(self.player_ids[player_index])
+        Some(self.owned_edges[edge_index].0)
     }
 
     fn indexes_of(&self, edges_to_find: Vec<Edge>) -> Vec<usize> {
         let mut found: Vec<usize> = vec![];
-        for (i, &drawn_edge) in self.edges.iter().enumerate() {
+        for (i, &(_, drawn_edge)) in self.owned_edges.iter().enumerate() {
             for &to_find in edges_to_find.iter() {
                 if drawn_edge == to_find {
                     found.push(i)
@@ -179,7 +179,7 @@ impl Board {
     }
 
     pub fn winner(&self) -> WinnerResult {
-        println!("DEBUG\n{:?}", self.edges);
+        println!("DEBUG\n{:?}", self.owned_edges);
 
         if !self.is_full() {
             return WinnerResult::None;
@@ -259,21 +259,20 @@ impl Board {
             .map(|d| DotBox(d))
     }
 
-    /**
+    /*
      * O(n). Should be able to make this O(1) by mapping...
      */
     pub fn find_edges(&self, dot: Dot) -> Vec<Edge> {
         let mut edges: Vec<Edge> = vec![];
-        for edge in self.edges.iter() {
+        for &(_, edge) in self.owned_edges.iter() {
             if edge.has_dot(dot) {
-                edges.push(*edge)
+                edges.push(edge)
             }
         }
         edges
     }
 
     pub fn find_connected(&self, dot: Dot) -> Vec<Dot> {
-        // let mut dots: Vec<Dot> = vec![];
         self.find_edges(dot)
             .iter()
             .map(|Edge(d1, d2)| if dot == *d1 { *d2 } else { *d1 })

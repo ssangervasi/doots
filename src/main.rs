@@ -130,12 +130,12 @@ fn run_game(cli_opts: &CLIOpts) -> Result<(), String> {
 
         let player_index = turn % players.len();
         let (player_id, player) = &players[player_index];
-        println!("Player {}'s turn", player_id);
+        println!("Turn #{}: Player {}", turn, player_id);
 
         // Note that the board clone is intentional as we don't want our
         // players to have any way of mutating the offical board state.
         let player_edge = player.play(board.clone());
-        match board.draw(player_edge) {
+        match board.draw((*player_id, player_edge)) {
             Err(_) => {
                 return Err(format!(
                     "Player {} ({}) attempted to draw an invalid edge: {}",
