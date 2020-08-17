@@ -94,8 +94,8 @@ fn test_edge_owner() {
 mod test_winner {
     use super::*;
 
-    fn safely_draw_boxes(board: &mut Board, boxes: &Vec<DotBox>) {
-        let mut owner_id = PlayerId::One;
+    fn safely_draw_boxes(board: &mut Board, first_owner_id: PlayerId, boxes: &Vec<DotBox>) {
+        let mut owner_id = first_owner_id;
         for dotbox in boxes {
             for box_edge in dotbox.edges() {
                 if board.is_free(box_edge) {
@@ -104,7 +104,7 @@ mod test_winner {
                 owner_id = if owner_id == PlayerId::One {
                     PlayerId::Two
                 } else {
-                    PlayerId::Two
+                    PlayerId::One
                 }
             }
         }
@@ -115,7 +115,7 @@ mod test_winner {
         let mut board = Board::new(10);
         // Owner: P2
         let p2_boxes = vec![DotBox(dot(0, 0)), DotBox(dot(0, 2)), DotBox(dot(0, 4))];
-        safely_draw_boxes(&mut board, &p2_boxes);
+        safely_draw_boxes(&mut board, PlayerId::One, &p2_boxes);
 
         // Moves that don't finish a box and end on P2's turn:
         board
@@ -128,7 +128,7 @@ mod test_winner {
 
         // Owner: P1
         let p1_boxes = vec![DotBox(dot(5, 5)), DotBox(dot(6, 6))];
-        safely_draw_boxes(&mut board, &p1_boxes);
+        safely_draw_boxes(&mut board, PlayerId::Two, &p1_boxes);
 
         println!("{}", board.to_string());
 
@@ -153,7 +153,7 @@ mod test_winner {
     #[test]
     fn when_size_one_is_full() {
         let mut board = Board::new(1);
-        safely_draw_boxes(&mut board, &vec![DotBox(dot(0, 0))]);
+        safely_draw_boxes(&mut board, PlayerId::One, &vec![DotBox(dot(0, 0))]);
         assert_that!(board.winner()).is_equal_to(WinnerResult::Winner(PlayerId::Two, 1));
     }
 
