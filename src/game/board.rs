@@ -186,8 +186,6 @@ impl Board {
     }
 
     pub fn winner(&self) -> WinnerResult {
-        println!("DEBUG\n{:?}", self.owned_edges);
-
         if !self.is_full() {
             return WinnerResult::None;
         }

@@ -1,21 +1,14 @@
 use clap::{App, Arg};
 use textwrap::dedent as dd;
 
-use doots::game::board::{Board, BoardSize, WinnerResult};
-use doots::players::choose::choose;
-use doots::utils::{pad_end, pad_out};
+use doots::game::board::BoardSize;
+use doots::game::engine::{run_game, Opts};
 
 fn main() {
     match cli() {
-        Ok(_) => println!("Done."),
+        Ok(_) => {}
         Err(msg) => eprintln!("{}", msg),
     }
-}
-
-struct CLIOpts {
-    board_size: BoardSize,
-    player_two: String,
-    player_one: String,
 }
 
 const SIZE_DEFAULT: BoardSize = 10;
@@ -53,6 +46,12 @@ fn cli() -> Result<(), String> {
                 .default_value("hoomin")
                 .help("Player two type"),
         )
+        .arg(
+            Arg::with_name("quiet")
+                .short("q")
+                .long("quiet")
+                .help("In quiet mode the board is not printed until the end."),
+        )
         .get_matches();
 
     let size_str = matches.value_of("size").unwrap().trim();
@@ -84,123 +83,15 @@ fn cli() -> Result<(), String> {
         }
     };
 
+    let quiet = matches.occurrences_of("quiet") > 0;
+
     let player_one = matches.value_of("player_one").unwrap().to_string();
     let player_two = matches.value_of("player_two").unwrap().to_string();
 
-    run_game(&CLIOpts {
+    run_game(&Opts {
         board_size,
         player_one,
         player_two,
+        quiet,
     })
 }
-
-fn run_game(cli_opts: &CLIOpts) -> Result<(), String> {
-    let mut board = Board::new(cli_opts.board_size);
-
-    print!(
-        "{}",
-        vec![
-            format!("· {} ·", pad_end("", "─", 40)),
-            format!("│ {} │", pad_out("Doots & Booxes", " ", 40)),
-            format!(
-                "│ {} │",
-                pad_out(
-                    &format!(
-                        "Playing with {} squares ({}x{} dots)",
-                        board.size(),
-                        board.dot_size(),
-                        board.dot_size()
-                    ),
-                    " ",
-                    40
-                )
-            ),
-            format!("· {} ·", pad_end("", "─", 40)),
-        ]
-        .join("\n")
-    );
-
-    // I'm being pretty zealos about not using the player struct's Id in order
-    // to prevent a player implementation from lying about where it actually
-    // falls in the turn order.
-    let players = choose(&cli_opts.player_one, &cli_opts.player_two);
-    let mut player_index = 0;
-    let mut streak_count = 0;
-
-    for turn in 0..(board.edge_count() as usize) {
-        print!("\n\n{}\n\n", board.to_string());
-
-        let (player_id, player) = &players[player_index];
-
-        if streak_count == 0 {
-            println!("Turn #{}: Player {}", turn + 1, player_id);
-        } else {
-            println!("Streak {}! Player {}", streak_count, player_id);
-        }
-
-        let owned_count_before_play = board.owned_boxes_count(*player_id);
-
-        // Note that the board clone is intentional as we don't want our
-        // players to have any way of mutating the offical board state.
-        let player_edge = player.play(board.clone());
-        match board.draw((*player_id, player_edge)) {
-            Err(_) => {
-                return Err(format!(
-                    "Player {} ({}) attempted to draw an invalid edge: {}",
-                    player_id,
-                    player.name(),
-                    player_edge,
-                ));
-            }
-            _ => {}
-        };
-        println!("Player {} drew: {}", player_id, player_edge);
-
-        let owned_count_after_play = board.owned_boxes_count(*player_id);
-
-        if owned_count_before_play < owned_count_after_play {
-            println!("Player {} finished a box!", player_id);
-            streak_count += 1;
-        } else {
-            player_index = (player_index + 1) % players.len();
-            streak_count = 0;
-        }
-    }
-
-    print!("\n\n{}\n\n", board.to_string());
-
-    let winner_message = match board.winner() {
-        WinnerResult::Winner(winner_id, winner_count) => {
-            let (_, winner) = players.iter().find(|(id, _)| *id == winner_id).unwrap();
-            format!(
-                "Player {} ({}) wins with {} boxes!",
-                winner_id,
-                winner.name(),
-                winner_count
-            )
-        }
-        WinnerResult::Tie(tied_ids, tied_count) => format!(
-            "A tie between {:?} with {} boxes each.",
-            tied_ids, tied_count
-        ),
-        WinnerResult::None => "I think something went wrong...".to_string(),
-    };
-
-    print!(
-        "{}",
-        vec![
-            format!("· {} ·", pad_end("", "─", winner_message.len())),
-            format!("│ {} │", pad_out("GAME OVER", " ", winner_message.len())),
-            format!("│ {} │", winner_message),
-            format!("· {} ·", pad_end("", "─", winner_message.len())),
-        ]
-        .join("\n")
-    );
-
-    Ok(())
-}
-
-// let pairs: Vec<(u32, u32)> = (0..board_size)
-//     .flat_map(|row| (0..board_size).map(move |col| (row, col)))
-//     .collect();
-// println!("{:?}", pairs);
