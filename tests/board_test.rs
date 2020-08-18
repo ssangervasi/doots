@@ -319,23 +319,23 @@ mod test_winner {
                 ),
                 (
                     PlayerId::One,
+                    Edge(Dot { row: 2, col: 2 }, Dot { row: 2, col: 1 }),
+                ),
+                (
+                    PlayerId::Two,
                     Edge(Dot { row: 0, col: 2 }, Dot { row: 1, col: 2 }),
+                ),
+                (
+                    PlayerId::One,
+                    Edge(Dot { row: 1, col: 0 }, Dot { row: 2, col: 0 }),
                 ),
                 (
                     PlayerId::Two,
                     Edge(Dot { row: 1, col: 0 }, Dot { row: 1, col: 1 }),
                 ),
                 (
-                    PlayerId::One,
-                    Edge(Dot { row: 1, col: 1 }, Dot { row: 1, col: 2 }),
-                ),
-                (
                     PlayerId::Two,
-                    Edge(Dot { row: 1, col: 0 }, Dot { row: 2, col: 0 }),
-                ),
-                (
-                    PlayerId::One,
-                    Edge(Dot { row: 1, col: 2 }, Dot { row: 2, col: 2 }),
+                    Edge(Dot { row: 1, col: 1 }, Dot { row: 1, col: 2 }),
                 ),
                 (
                     PlayerId::Two,
@@ -346,8 +346,8 @@ mod test_winner {
                     Edge(Dot { row: 2, col: 0 }, Dot { row: 2, col: 1 }),
                 ),
                 (
-                    PlayerId::Two,
-                    Edge(Dot { row: 2, col: 1 }, Dot { row: 2, col: 2 }),
+                    PlayerId::One,
+                    Edge(Dot { row: 1, col: 2 }, Dot { row: 2, col: 2 }),
                 ),
             ])
             .expect("Draw failed");

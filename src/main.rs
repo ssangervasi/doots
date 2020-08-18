@@ -125,14 +125,20 @@ fn run_game(cli_opts: &CLIOpts) -> Result<(), String> {
     // falls in the turn order.
     let players = choose(&cli_opts.player_one, &cli_opts.player_two);
     let mut player_index = 0;
+    let mut streak_count = 0;
 
     for turn in 0..(board.edge_count() as usize) {
         print!("\n\n{}\n\n", board.to_string());
 
         let (player_id, player) = &players[player_index];
-        println!("Turn #{}: Player {}", turn + 1, player_id);
 
-        // let boxes_before_turn = board.
+        if streak_count == 0 {
+            println!("Turn #{}: Player {}", turn + 1, player_id);
+        } else {
+            println!("Streak {}! Player {}", streak_count, player_id);
+        }
+
+        let owned_count_before_play = board.owned_boxes_count(*player_id);
 
         // Note that the board clone is intentional as we don't want our
         // players to have any way of mutating the offical board state.
@@ -150,7 +156,15 @@ fn run_game(cli_opts: &CLIOpts) -> Result<(), String> {
         };
         println!("Player {} drew: {}", player_id, player_edge);
 
-        player_index = (player_index + 1 ) % players.len();
+        let owned_count_after_play = board.owned_boxes_count(*player_id);
+
+        if owned_count_before_play < owned_count_after_play {
+            println!("Player {} finished a box!", player_id);
+            streak_count += 1;
+        } else {
+            player_index = (player_index + 1) % players.len();
+            streak_count = 0;
+        }
     }
 
     print!("\n\n{}\n\n", board.to_string());
