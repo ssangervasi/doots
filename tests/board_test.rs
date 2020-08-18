@@ -4,111 +4,129 @@ use spectral::{assert_that, asserting};
 use doots::game::board::{dot, edge, Board, Dot, DotBox, Edge, WinnerResult};
 use doots::players::player::PlayerId;
 
-#[test]
-fn it_calculates_dot_count() {
-    let board = Board::new(2);
-    assert_that!(board.dot_count()).is_equal_to(9);
-}
-
-#[test]
-fn test_is_free() {
-    let mut board = Board::new(2);
-    board
-        .draw((PlayerId::One, edge((0, 0), (0, 1))))
-        .expect("Draw failed!");
-
-    assert_that!(board.is_free(edge((0, 0), (1, 0)))).is_true();
-    assert_that!(board.is_free(edge((0, 0), (0, 1)))).is_false();
-    assert_that!(board.is_free(edge((0, 1), (0, 0)))).is_false();
-}
-
-#[test]
-fn test_iter_dots() {
-    let board = Board::new(2);
-    let dots = board.iter_dots();
-    let mut count = 0;
-
-    for (i, dot) in dots.enumerate() {
-        println!("{}: {}", i, dot);
-        count += 1;
+fn safely_draw_boxes(board: &mut Board, first_owner_id: PlayerId, boxes: &Vec<DotBox>) {
+    let mut owner_id = first_owner_id;
+    for dotbox in boxes {
+        for box_edge in dotbox.edges() {
+            if board.is_free(box_edge) {
+                board.draw((owner_id, box_edge)).expect("Draw failed");
+            }
+            owner_id = if owner_id == PlayerId::One {
+                PlayerId::Two
+            } else {
+                PlayerId::One
+            }
+        }
     }
-    assert_eq!(board.dot_count(), count)
 }
 
-#[test]
-fn test_iter_edges_count() {
-    let board = Board::new(2);
-    let edges = board.iter_edges();
-    let mut count = 0;
+mod test_iterators {
+    use super::*;
 
-    for (i, edge) in edges.enumerate() {
-        println!("{}: {}", i, edge);
-        count += 1;
+    #[test]
+    fn it_calculates_dot_count() {
+        let board = Board::new(2);
+        assert_that!(board.dot_count()).is_equal_to(9);
     }
-    assert_eq!(board.edge_count(), count)
+
+    #[test]
+    fn test_iter_dots() {
+        let board = Board::new(2);
+        let dots = board.iter_dots();
+        let mut count = 0;
+
+        for (i, dot) in dots.enumerate() {
+            println!("{}: {}", i, dot);
+            count += 1;
+        }
+        assert_eq!(board.dot_count(), count)
+    }
+
+    #[test]
+    fn test_iter_edges_count() {
+        let board = Board::new(2);
+        let edges = board.iter_edges();
+        let mut count = 0;
+
+        for (i, edge) in edges.enumerate() {
+            println!("{}: {}", i, edge);
+            count += 1;
+        }
+        assert_eq!(board.edge_count(), count)
+    }
+
+    #[test]
+    fn test_iter_edges() {
+        let board = Board::new(2);
+        let mut edges = board.iter_edges();
+
+        assert_eq!(edge((0, 0), (0, 1)), edges.next().unwrap());
+        assert_eq!(edge((0, 0), (1, 0)), edges.next().unwrap());
+
+        assert_eq!(edge((0, 1), (0, 2)), edges.next().unwrap());
+        assert_eq!(edge((0, 1), (1, 1)), edges.next().unwrap());
+
+        assert_eq!(edge((0, 2), (1, 2)), edges.next().unwrap());
+
+        assert_eq!(edge((1, 0), (1, 1)), edges.next().unwrap());
+        assert_eq!(edge((1, 0), (2, 0)), edges.next().unwrap());
+    }
 }
 
-#[test]
-fn test_iter_edges() {
-    let board = Board::new(2);
-    let mut edges = board.iter_edges();
+mod test_ownership {
+    use super::*;
 
-    assert_eq!(edge((0, 0), (0, 1)), edges.next().unwrap());
-    assert_eq!(edge((0, 0), (1, 0)), edges.next().unwrap());
+    #[test]
+    fn test_is_free() {
+        let mut board = Board::new(2);
+        board
+            .draw((PlayerId::One, edge((0, 0), (0, 1))))
+            .expect("Draw failed!");
 
-    assert_eq!(edge((0, 1), (0, 2)), edges.next().unwrap());
-    assert_eq!(edge((0, 1), (1, 1)), edges.next().unwrap());
+        assert_that!(board.is_free(edge((0, 0), (1, 0)))).is_true();
+        assert_that!(board.is_free(edge((0, 0), (0, 1)))).is_false();
+        assert_that!(board.is_free(edge((0, 1), (0, 0)))).is_false();
+    }
 
-    assert_eq!(edge((0, 2), (1, 2)), edges.next().unwrap());
+    #[test]
+    fn test_edge_owner() {
+        let mut board = Board::new(2);
+        board
+            .draw_many(vec![
+                (PlayerId::One, edge((1, 1), (1, 2))),
+                (PlayerId::Two, edge((1, 1), (2, 1))),
+                (PlayerId::One, edge((2, 2), (1, 2))),
+                (PlayerId::Two, edge((2, 2), (2, 1))),
+            ])
+            .expect("Draw failed");
 
-    assert_eq!(edge((1, 0), (1, 1)), edges.next().unwrap());
-    assert_eq!(edge((1, 0), (2, 0)), edges.next().unwrap());
-}
+        assert_that!(board.edge_owner(edge((1, 1), (1, 2))).unwrap()).is_equal_to(PlayerId::One);
+        assert_that!(board.edge_owner(edge((2, 2), (1, 2))).unwrap()).is_equal_to(PlayerId::One);
+        assert_that!(board.edge_owner(edge((1, 1), (2, 1))).unwrap()).is_equal_to(PlayerId::Two);
+        assert_that!(board.edge_owner(edge((2, 2), (2, 1))).unwrap()).is_equal_to(PlayerId::Two);
 
-#[test]
-fn test_edge_owner() {
-    let mut board = Board::new(2);
-    board
-        .draw_many(vec![
-            (PlayerId::One, edge((1, 1), (1, 2))),
-            (PlayerId::Two, edge((1, 1), (2, 1))),
-            (PlayerId::One, edge((2, 2), (1, 2))),
-            (PlayerId::Two, edge((2, 2), (2, 1))),
-        ])
-        .expect("Draw failed");
+        asserting!("an un-drawn edge is not owned")
+            .that(&board.edge_owner(edge((0, 0), (0, 1))))
+            .is_equal_to(None);
 
-    assert_that!(board.edge_owner(edge((1, 1), (1, 2))).unwrap()).is_equal_to(PlayerId::One);
-    assert_that!(board.edge_owner(edge((2, 2), (1, 2))).unwrap()).is_equal_to(PlayerId::One);
-    assert_that!(board.edge_owner(edge((1, 1), (2, 1))).unwrap()).is_equal_to(PlayerId::Two);
-    assert_that!(board.edge_owner(edge((2, 2), (2, 1))).unwrap()).is_equal_to(PlayerId::Two);
+        asserting!("an out-of-bounds edge is not owned")
+            .that(&board.edge_owner(edge((10, 10), (11, 10))))
+            .is_equal_to(None);
+    }
 
-    asserting!("an un-drawn edge is not owned")
-        .that(&board.edge_owner(edge((0, 0), (0, 1))))
-        .is_equal_to(None);
+    #[test]
+    fn test_owned_boxes_count() {
+        let mut board = Board::new(2);
+        let p2_boxes = vec![DotBox(dot(0, 0)), DotBox(dot(1, 1))];
+        safely_draw_boxes(&mut board, PlayerId::One, &p2_boxes);
 
-    asserting!("an out-of-bounds edge is not owned")
-        .that(&board.edge_owner(edge((10, 10), (11, 10))))
-        .is_equal_to(None);
+        assert_that!(board.owned_boxes_count(PlayerId::One)).is_equal_to(0);
+        assert_that!(board.owned_boxes_count(PlayerId::Two)).is_equal_to(2);
+    }
 }
 
 mod test_winner {
     use super::*;
-
-    fn safely_draw_boxes(board: &mut Board, first_owner_id: PlayerId, boxes: &Vec<DotBox>) {
-        let mut owner_id = first_owner_id;
-        for dotbox in boxes {
-            for box_edge in dotbox.edges() {
-                if board.is_free(box_edge) {
-                    board.draw((owner_id, box_edge)).expect("Draw failed");
-                }
-                owner_id = if owner_id == PlayerId::One {
-                    PlayerId::Two
-                } else {
-                    PlayerId::One
-                }
-            }
-        }
-    }
 
     #[test]
     fn owner_to_boxes_is_basis_of_winner_logic() {

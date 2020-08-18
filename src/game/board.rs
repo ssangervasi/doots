@@ -178,6 +178,13 @@ impl Board {
         hash
     }
 
+    pub fn owned_boxes_count(&self, owner: PlayerId) -> usize {
+        match self.owner_to_boxes().get(&owner) {
+            Some(boxes) => boxes.len(),
+            None => 0,
+        }
+    }
+
     pub fn winner(&self) -> WinnerResult {
         println!("DEBUG\n{:?}", self.owned_edges);
 
