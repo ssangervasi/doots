@@ -357,6 +357,58 @@ mod test_winner {
     }
 }
 
+mod test_would_claim_box {
+    use super::*;
+
+    #[test]
+    fn when_size_one_is_empty() {
+        let board = Board::new(1);
+        assert_that!(board.would_claim_box(edge((0, 0), (0, 1)))).is_false();
+        assert_that!(board.would_claim_box(edge((0, 0), (1, 0)))).is_false();
+        assert_that!(board.would_claim_box(edge((1, 0), (1, 1)))).is_false();
+        assert_that!(board.would_claim_box(edge((0, 1), (1, 1)))).is_false();
+    }
+
+    #[test]
+    fn when_size_one_has_three_filled() {
+        let mut board = Board::new(1);
+        board
+            .draw_many(vec![
+                (PlayerId::One, edge((0, 0), (0, 1))),
+                (PlayerId::Two, edge((0, 0), (1, 0))),
+                (PlayerId::Two, edge((1, 0), (1, 1))),
+            ])
+            .expect("Draw failed");
+
+        assert_that!(board.would_claim_box(edge((1, 0), (1, 1)))).is_false();
+        assert_that!(board.would_claim_box(edge((0, 1), (1, 1)))).is_true();
+    }
+
+    #[test]
+    fn when_one_box_would_be_filled() {
+        let board = Board::new(1);
+        assert_that!(board.would_claim_box(edge((0, 0), (0, 1)))).is_false();
+        assert_that!(board.would_claim_box(edge((0, 0), (1, 0)))).is_false();
+        assert_that!(board.would_claim_box(edge((1, 0), (1, 1)))).is_false();
+        assert_that!(board.would_claim_box(edge((0, 1), (1, 1)))).is_false();
+    }
+
+    #[test]
+    fn when_size_one_has_three_filled() {
+        let mut board = Board::new(1);
+        board
+            .draw_many(vec![
+                (PlayerId::One, edge((0, 0), (0, 1))),
+                (PlayerId::Two, edge((0, 0), (1, 0))),
+                (PlayerId::Two, edge((1, 0), (1, 1))),
+            ])
+            .expect("Draw failed");
+
+        assert_that!(board.would_claim_box(edge((1, 0), (1, 1)))).is_false();
+        assert_that!(board.would_claim_box(edge((0, 1), (1, 1)))).is_true();
+    }
+}
+
 mod test_box_owner {
     use super::*;
 
