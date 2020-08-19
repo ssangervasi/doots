@@ -1,4 +1,5 @@
 use core::fmt;
+use std::cmp::Ordering;
 use std::ops;
 
 use crate::game::box_drawings::{DOT, LINE_H};
@@ -6,15 +7,29 @@ use crate::players::player::PlayerId;
 
 pub type BoardSize = u16;
 
+/*
+ * Shorthand constructors to create dots and edges from tuples.
+ */
+pub fn dot(row: BoardSize, col: BoardSize) -> Dot {
+    Dot { row, col }
+}
+pub fn edge((r1, c1): (BoardSize, BoardSize), (r2, c2): (BoardSize, BoardSize)) -> Edge {
+    Edge(dot(r1, c1), dot(r2, c2))
+}
+
+/*
+ * Dot
+ */
 #[derive(Default, Copy, Clone, Debug, Eq)]
 pub struct Dot {
     pub row: BoardSize,
     pub col: BoardSize,
 }
 
-/* Shorthand to create dot. */
-pub fn dot(row: BoardSize, col: BoardSize) -> Dot {
-    Dot { row, col }
+impl Dot {
+    pub fn transpose(&self) -> Self {
+        dot(self.row, self.col)
+    }
 }
 
 impl fmt::Display for Dot {
@@ -26,6 +41,21 @@ impl fmt::Display for Dot {
 impl PartialEq for Dot {
     fn eq(&self, other: &Self) -> bool {
         self.row == other.row && self.col == other.col
+    }
+}
+
+impl Ord for Dot {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self.row.cmp(&other.row) {
+            Ordering::Equal => self.col.cmp(&other.row),
+            ne_result => ne_result,
+        }
+    }
+}
+
+impl PartialOrd for Dot {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 
@@ -55,6 +85,9 @@ impl ops::Add for Dot {
     }
 }
 
+/*
+ * Edge
+ */
 #[derive(Default, Copy, Clone, Debug, Eq)]
 pub struct Edge(pub Dot, pub Dot);
 
@@ -83,19 +116,11 @@ impl PartialEq for Edge {
     }
 }
 
-/* Shorthand to create an edge from tuples instead of dots. */
-pub fn edge((r1, c1): (BoardSize, BoardSize), (r2, c2): (BoardSize, BoardSize)) -> Edge {
-    Edge(dot(r1, c1), dot(r2, c2))
-}
-
+/*
+ * Dot
+ */
 #[derive(Default, Copy, Clone, Debug, Eq)]
 pub struct DotBox(pub Dot);
-
-impl PartialEq for DotBox {
-    fn eq(&self, other: &Self) -> bool {
-        self.upper_left() == other.upper_left()
-    }
-}
 
 impl DotBox {
     pub fn upper_left(&self) -> Dot {
@@ -135,6 +160,15 @@ impl DotBox {
     }
 }
 
+impl PartialEq for DotBox {
+    fn eq(&self, other: &Self) -> bool {
+        self.upper_left() == other.upper_left()
+    }
+}
+
+/*
+ * WinnerResult
+ */
 #[derive(Clone, Debug, Eq)]
 pub enum WinnerResult {
     Winner(PlayerId, usize),

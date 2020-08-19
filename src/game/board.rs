@@ -101,7 +101,7 @@ impl Board {
     }
 
     pub fn is_free(&self, Edge(d1, d2): Edge) -> bool {
-        for connected in self.find_connected(d1).iter() {
+        for connected in self.dots_connected_to_dot(d1).iter() {
             if d2 == *connected {
                 return false;
             }
@@ -113,16 +113,61 @@ impl Board {
         !self.is_free(edge)
     }
 
+    pub fn would_claim_box(&self, edge: Edge) -> bool {
+        for dotbox in self.associated_boxes(edge) {
+            let box_owned_edges = self.box_owned_edges(dotbox);
+            if box_owned_edges.len() == 3 && !box_owned_edges.iter().any(|&(_, e)| e == edge) {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    pub fn box_owned_edges(&self, dotbox: DotBox) -> Vec<OwnedEdge> {
+        self.edge_indexes(dotbox.edges())
+            .iter()
+            .map(|&i| self.owned_edges[i])
+            .collect()
+    }
+
+    pub fn associated_boxes(&self, edge: Edge) -> Vec<DotBox> {
+        let start = edge.0.min(edge.1);
+        let end = edge.0.max(edge.1);
+        let mut boxes: Vec<DotBox> = vec![];
+
+        if start.row < end.row {
+            // Vertical edge, so boxes are on left and right
+            if 0 < start.col {
+                boxes.push(DotBox(start - dot(0, 1)));
+            }
+            if start.col < self.dot_size() {
+                boxes.push(DotBox(start));
+            }
+        } else if start.col < end.col {
+            // Horizontal edge, so boxes are on top and bottom
+            if 0 < start.row {
+                boxes.push(DotBox(start - dot(1, 0)));
+            }
+            if start.row < self.dot_size() {
+                boxes.push(DotBox(start));
+            }
+        }
+
+        boxes
+    }
+
     /*
      * Which PlayerId drew the edge. At the moment, the owner methods are all
      * O(n) where n = number of edges drawn. This could be sped up by storing
      * owner information at draw time.
      */
     pub fn edge_owner(&self, edge: Edge) -> Option<PlayerId> {
-        let indexes = self.indexes_of(vec![edge]);
+        let indexes = self.edge_indexes(vec![edge]);
         if indexes.len() < 1 {
             return None;
         }
+
         self.edge_index_owner(indexes[0])
     }
 
@@ -130,10 +175,11 @@ impl Board {
         if self.owned_edges.len() <= edge_index {
             return None;
         }
+
         Some(self.owned_edges[edge_index].0)
     }
 
-    fn indexes_of(&self, edges_to_find: Vec<Edge>) -> Vec<usize> {
+    fn edge_indexes(&self, edges_to_find: Vec<Edge>) -> Vec<usize> {
         let mut found: Vec<usize> = vec![];
         for (i, &(_, drawn_edge)) in self.owned_edges.iter().enumerate() {
             for &to_find in edges_to_find.iter() {
@@ -145,6 +191,7 @@ impl Board {
                 break;
             }
         }
+
         found
     }
 
@@ -157,7 +204,7 @@ impl Board {
      */
     pub fn box_owner(&self, corner: Dot) -> Option<PlayerId> {
         let dot_box = DotBox(corner);
-        let indexes = self.indexes_of(dot_box.edges());
+        let indexes = self.edge_indexes(dot_box.edges());
         if indexes.len() < 4 {
             return None;
         }
@@ -267,7 +314,7 @@ impl Board {
     /*
      * O(n). Should be able to make this O(1) by mapping...
      */
-    pub fn find_edges(&self, dot: Dot) -> Vec<Edge> {
+    pub fn edges_connected_to_dot(&self, dot: Dot) -> Vec<Edge> {
         let mut edges: Vec<Edge> = vec![];
         for &(_, edge) in self.owned_edges.iter() {
             if edge.has_dot(dot) {
@@ -277,8 +324,8 @@ impl Board {
         edges
     }
 
-    pub fn find_connected(&self, dot: Dot) -> Vec<Dot> {
-        self.find_edges(dot)
+    pub fn dots_connected_to_dot(&self, dot: Dot) -> Vec<Dot> {
+        self.edges_connected_to_dot(dot)
             .iter()
             .map(|Edge(d1, d2)| if dot == *d1 { *d2 } else { *d1 })
             .collect()
@@ -338,7 +385,7 @@ impl Board {
 
     pub fn choose_char(&self, dot: Dot) -> BoxChar {
         let mut box_char = BoxChar::default();
-        for connected in self.find_connected(dot).iter() {
+        for connected in self.dots_connected_to_dot(dot).iter() {
             // Note that only one of these can be true because dots are not
             // allowed to connect diagonally.
             if connected.row < dot.row {

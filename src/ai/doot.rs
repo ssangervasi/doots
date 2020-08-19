@@ -23,11 +23,20 @@ impl Player for Doot {
     }
 
     fn play(&self, board: Board) -> Edge {
+        let mut last_free_edge = edge((0, 0), (0, 1));
         for edge in board.iter_edges() {
-            if board.is_free(edge) {
+            if !board.is_free(edge) {
+                continue;
+            }
+            last_free_edge = edge;
+
+            // If a box can be taken, return immediately.
+            if board.would_claim_box(edge) {
                 return edge;
             }
         }
-        return edge((0, 0), (0, 1));
+
+        // If no squares were found, just dumly take a free edge.
+        last_free_edge
     }
 }
