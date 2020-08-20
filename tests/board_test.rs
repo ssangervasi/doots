@@ -370,7 +370,7 @@ mod test_would_claim_box {
     }
 
     #[test]
-    fn when_size_one_has_three_filled() {
+    fn when_size_one_has_three_drawn() {
         let mut board = Board::new(1);
         board
             .draw_many(vec![
@@ -385,27 +385,74 @@ mod test_would_claim_box {
     }
 
     #[test]
-    fn when_one_box_would_be_filled() {
-        let board = Board::new(1);
-        assert_that!(board.would_claim_box(edge((0, 0), (0, 1)))).is_false();
-        assert_that!(board.would_claim_box(edge((0, 0), (1, 0)))).is_false();
-        assert_that!(board.would_claim_box(edge((1, 0), (1, 1)))).is_false();
+    fn when_size_one_has_four_drawn() {
+        let mut board = Board::new(1);
+        board
+            .draw_many(vec![
+                (PlayerId::One, edge((0, 0), (0, 1))),
+                (PlayerId::Two, edge((0, 0), (1, 0))),
+                (PlayerId::One, edge((1, 0), (1, 1))),
+                (PlayerId::Two, edge((0, 1), (1, 1))),
+            ])
+            .expect("Draw failed");
+
         assert_that!(board.would_claim_box(edge((0, 1), (1, 1)))).is_false();
     }
 
     #[test]
-    fn when_size_one_has_three_filled() {
-        let mut board = Board::new(1);
+    fn when_a_box_above_would_be_filled() {
+        let mut board = Board::new(4);
         board
             .draw_many(vec![
-                (PlayerId::One, edge((0, 0), (0, 1))),
-                (PlayerId::Two, edge((0, 0), (1, 0))),
-                (PlayerId::Two, edge((1, 0), (1, 1))),
+                (PlayerId::One, edge((2, 2), (2, 3))),
+                (PlayerId::Two, edge((2, 2), (3, 2))),
+                (PlayerId::One, edge((2, 3), (3, 3))),
             ])
             .expect("Draw failed");
 
-        assert_that!(board.would_claim_box(edge((1, 0), (1, 1)))).is_false();
-        assert_that!(board.would_claim_box(edge((0, 1), (1, 1)))).is_true();
+        assert_that!(board.would_claim_box(edge((3, 2), (3, 3)))).is_true();
+    }
+
+    #[test]
+    fn when_a_box_below_would_be_filled() {
+        let mut board = Board::new(4);
+        board
+            .draw_many(vec![
+                (PlayerId::One, edge((3, 2), (3, 3))),
+                (PlayerId::Two, edge((2, 2), (3, 2))),
+                (PlayerId::One, edge((2, 3), (3, 3))),
+            ])
+            .expect("Draw failed");
+
+        assert_that!(board.would_claim_box(edge((2, 2), (2, 3)))).is_true();
+    }
+
+    #[test]
+    fn when_a_box_left_would_be_filled() {
+        let mut board = Board::new(4);
+        board
+            .draw_many(vec![
+                (PlayerId::One, edge((2, 2), (2, 3))),
+                (PlayerId::Two, edge((3, 2), (3, 3))),
+                (PlayerId::One, edge((2, 2), (3, 2))),
+            ])
+            .expect("Draw failed");
+
+        assert_that!(board.would_claim_box(edge((2, 3), (3, 3)))).is_true();
+    }
+
+    #[test]
+    fn when_a_box_right_would_be_filled() {
+        let mut board = Board::new(4);
+        board
+            .draw_many(vec![
+                (PlayerId::One, edge((2, 2), (2, 3))),
+                (PlayerId::Two, edge((3, 2), (3, 3))),
+                (PlayerId::One, edge((2, 3), (3, 3))),
+            ])
+            .expect("Draw failed");
+
+        assert_that!(board.would_claim_box(edge((2, 2), (3, 2)))).is_true();
     }
 }
 
