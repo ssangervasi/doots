@@ -9,17 +9,17 @@ use crate::players::player::{Player, PlayerId};
 pub const KEY: &str = "sleepy";
 
 #[derive(Debug, Clone)]
-pub struct Sleepy {
+pub struct AI {
     id: PlayerId,
 }
 
-impl Sleepy {
+impl AI {
     pub fn new(id: PlayerId) -> Self {
         Self { id }
     }
 }
 
-impl Player for Sleepy {
+impl Player for AI {
     fn name(&self) -> String {
         match self.id {
             PlayerId::One => "Sleepy One".to_string(),

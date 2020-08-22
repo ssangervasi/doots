@@ -49,9 +49,9 @@ pub fn run_game(opts: &Opts) -> Result<(), String> {
             print!("\n\n{}\n\n", board.to_string());
 
             if streak_count == 0 {
-                println!("Turn #{}: Player {}", turn + 1, player_id);
+                println!("Turn #{}: {}", turn + 1, player.name());
             } else {
-                println!("Streak {}! Player {}", streak_count, player_id);
+                println!("Streak {}! {}", streak_count, player.name());
             }
         }
 

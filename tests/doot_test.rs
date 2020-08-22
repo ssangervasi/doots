@@ -1,21 +1,21 @@
 use spectral::assert_that;
 
-use doots::ai::doot::Doot;
+use doots::ai::doot;
 use doots::game::board::{edge, Board};
 use doots::players::player::{Player, PlayerId};
 
 #[test]
 fn test_draw_on_open_board() {
-    let doot = Doot::new(PlayerId::One);
+    let ai = doot::AI::new(PlayerId::One);
     let board = Board::new(2);
-    let play = doot.play(board);
+    let play = ai.play(board);
 
     assert_that!(play).is_equal_to(edge((2, 1), (2, 2)));
 }
 
 #[test]
 fn test_draw_to_complete_box() {
-    let doot = Doot::new(PlayerId::Two);
+    let ai = doot::AI::new(PlayerId::Two);
     let mut board = Board::new(2);
     board
         .draw_many(vec![
@@ -25,6 +25,6 @@ fn test_draw_to_complete_box() {
         ])
         .expect("Draw failed");
 
-    let play = doot.play(board);
+    let play = ai.play(board);
     assert_that!(play).is_equal_to(edge((0, 1), (1, 1)));
 }

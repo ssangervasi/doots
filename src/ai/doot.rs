@@ -4,17 +4,17 @@ use crate::players::player::{Player, PlayerId};
 pub const KEY: &str = "doot";
 
 #[derive(Debug, Clone)]
-pub struct Doot {
+pub struct AI {
     id: PlayerId,
 }
 
-impl Doot {
+impl AI {
     pub fn new(id: PlayerId) -> Self {
         Self { id }
     }
 }
 
-impl Player for Doot {
+impl Player for AI {
     fn name(&self) -> String {
         match self.id {
             PlayerId::One => "Doot One".to_string(),
