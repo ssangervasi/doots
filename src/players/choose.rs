@@ -1,6 +1,7 @@
 use crate::players::hoomin;
 use crate::players::player::{Player, PlayerId};
 
+use crate::ai::boox;
 use crate::ai::doot;
 use crate::ai::sleepy;
 
@@ -15,6 +16,9 @@ pub fn choose(name_one: &str, name_two: &str) -> Vec<(PlayerId, Box<dyn Player>)
         match name {
             doot::KEY => {
                 players.push((id, Box::new(doot::AI::new(id))));
+            }
+            boox::KEY => {
+                players.push((id, Box::new(boox::AI::new(id))));
             }
             sleepy::KEY => {
                 players.push((id, Box::new(sleepy::AI::new(id))));
