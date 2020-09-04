@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
-pub use crate::game::basic_types::{dot, edge, BoardSize, Dot, DotBox, Edge, WinnerResult};
+pub use crate::game::basic_types::{dot, dotbox, edge, BoardSize, Dot, DotBox, Edge, WinnerResult};
 use crate::game::box_drawings::{lookup, BoxChar, LINE_H, LINE_V};
 use crate::players::player::PlayerId;
 use crate::utils::{pad_end, pad_out};
 
-type OwnedEdge = (PlayerId, Edge);
+pub type OwnedEdge = (PlayerId, Edge);
 
 #[derive(Clone, Debug)]
 pub struct Board {
@@ -101,8 +101,8 @@ impl Board {
     }
 
     pub fn is_free(&self, Edge(d1, d2): Edge) -> bool {
-        for connected in self.dots_connected_to_dot(d1).iter() {
-            if d2 == *connected {
+        for &connected in self.dots_connected_to_dot(d1).iter() {
+            if d2 == connected {
                 return false;
             }
         }
@@ -131,7 +131,17 @@ impl Board {
             .collect()
     }
 
+    /*
+     * The boxes to which an edge can contribute. This returns two boxes for
+     * interior edges, only one box for edges on the borders, or zero boxes
+     * for edges that don't fit. Note that doesn't do any drawn/owned
+     * checking.
+     */
     pub fn associated_boxes(&self, edge: Edge) -> Vec<DotBox> {
+        if !self.edge_fits(edge) {
+            return vec![];
+        }
+
         let start = edge.0.min(edge.1);
         let end = edge.0.max(edge.1);
         let mut boxes: Vec<DotBox> = vec![];
@@ -141,7 +151,7 @@ impl Board {
             if 0 < start.col {
                 boxes.push(DotBox(start - dot(0, 1)));
             }
-            if start.col < self.dot_size() {
+            if start.col < self.size() {
                 boxes.push(DotBox(start));
             }
         } else if start.col < end.col {
@@ -149,7 +159,7 @@ impl Board {
             if 0 < start.row {
                 boxes.push(DotBox(start - dot(1, 0)));
             }
-            if start.row < self.dot_size() {
+            if start.row < self.size() {
                 boxes.push(DotBox(start));
             }
         }
@@ -302,6 +312,13 @@ impl Board {
         })
     }
 
+    /*
+     * Iterator over owned edges in the order they were drawn (most recent turn last).
+     */
+    pub fn iter_owned_edges(&self) -> impl Iterator<Item = OwnedEdge> + '_ {
+        self.owned_edges.iter().map(move |&oe| oe)
+    }
+
     pub fn iter_boxes(&self) -> impl Iterator<Item = DotBox> {
         let max_dot_index = self.dot_size() - 1;
         self.iter_dots()
@@ -315,19 +332,17 @@ impl Board {
      * O(n). Should be able to make this O(1) by mapping...
      */
     pub fn edges_connected_to_dot(&self, dot: Dot) -> Vec<Edge> {
-        let mut edges: Vec<Edge> = vec![];
-        for &(_, edge) in self.owned_edges.iter() {
-            if edge.has_dot(dot) {
-                edges.push(edge)
-            }
-        }
-        edges
+        self.owned_edges
+            .iter()
+            .filter(|&(_, edge)| edge.has_dot(dot))
+            .map(|&(_, edge)| edge)
+            .collect()
     }
 
     pub fn dots_connected_to_dot(&self, dot: Dot) -> Vec<Dot> {
         self.edges_connected_to_dot(dot)
             .iter()
-            .map(|Edge(d1, d2)| if dot == *d1 { *d2 } else { *d1 })
+            .map(|&Edge(d1, d2)| if dot == d1 { d2 } else { d1 })
             .collect()
     }
 

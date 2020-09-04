@@ -8,13 +8,16 @@ use crate::players::player::PlayerId;
 pub type BoardSize = u16;
 
 /*
- * Shorthand constructors to create dots and edges from tuples.
+ * Shorthand constructors to create objects from tuples.
  */
 pub fn dot(row: BoardSize, col: BoardSize) -> Dot {
     Dot { row, col }
 }
 pub fn edge((r1, c1): (BoardSize, BoardSize), (r2, c2): (BoardSize, BoardSize)) -> Edge {
     Edge(dot(r1, c1), dot(r2, c2))
+}
+pub fn dotbox((r1, c1): (BoardSize, BoardSize)) -> DotBox {
+    DotBox(dot(r1, c1))
 }
 
 /*
@@ -47,7 +50,7 @@ impl PartialEq for Dot {
 impl Ord for Dot {
     fn cmp(&self, other: &Self) -> Ordering {
         match self.row.cmp(&other.row) {
-            Ordering::Equal => self.col.cmp(&other.row),
+            Ordering::Equal => self.col.cmp(&other.col),
             ne_result => ne_result,
         }
     }

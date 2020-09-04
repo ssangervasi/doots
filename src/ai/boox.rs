@@ -1,4 +1,4 @@
-use crate::game::board::{edge, Board, Edge};
+use crate::game::board::{Board, Edge};
 use crate::players::player::{Player, PlayerId};
 
 pub const KEY: &str = "boox";
@@ -23,20 +23,33 @@ impl Player for AI {
     }
 
     fn play(&self, board: Board) -> Edge {
-        let mut last_free_edge = edge((0, 0), (0, 1));
-        for edge in board.iter_edges() {
-            if !board.is_free(edge) {
-                continue;
-            }
-            last_free_edge = edge;
+        let (claimers, others): (Vec<Edge>, Vec<Edge>) = board
+            .iter_owned_edges()
+            .filter(|&(owner, _)| owner != self.id)
+            .map(|(_, edge)| edge)
+            .collect::<Vec<Edge>>()
+            .iter()
+            .rev()
+            .map(|&edge| edge)
+            .flat_map(|edge| {
+                board
+                    .associated_boxes(edge)
+                    .iter()
+                    .flat_map(|&dotbox| dotbox.edges())
+                    .collect::<Vec<Edge>>()
+            })
+            .filter(|&edge| board.is_free(edge))
+            .partition(|&edge| board.would_claim_box(edge));
 
-            // If a box can be taken, return immediately.
-            if board.would_claim_box(edge) {
-                return edge;
-            }
+        if claimers.len() > 0 {
+            return claimers[0];
         }
-
-        // If no squares were found, just dumly take a free edge.
-        last_free_edge
+        if others.len() > 0 {
+            return others[0];
+        }
+        board
+            .iter_edges()
+            .find(|&edge| board.is_free(edge))
+            .unwrap()
     }
 }

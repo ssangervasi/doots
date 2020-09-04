@@ -1,7 +1,7 @@
 use spectral::boolean::BooleanAssertions;
 use spectral::{assert_that, asserting};
 
-use doots::game::board::{dot, edge, Board, Dot, DotBox, Edge, WinnerResult};
+use doots::game::board::{dot, dotbox, edge, Board, Dot, DotBox, Edge, WinnerResult};
 use doots::players::player::PlayerId;
 
 fn safely_draw_boxes(board: &mut Board, first_owner_id: PlayerId, boxes: &Vec<DotBox>) {
@@ -20,14 +20,41 @@ fn safely_draw_boxes(board: &mut Board, first_owner_id: PlayerId, boxes: &Vec<Do
     }
 }
 
-mod test_iterators {
+mod test_calculators {
     use super::*;
 
     #[test]
-    fn it_calculates_dot_count() {
+    fn test_dot_count() {
         let board = Board::new(2);
         assert_that!(board.dot_count()).is_equal_to(9);
     }
+
+    #[test]
+    fn test_associated_boxes() {
+        let board = Board::new(2);
+
+        // Interor edges with 2 results
+        assert_that!(board.associated_boxes(edge((1, 1), (1, 2))))
+            .is_equal_to(vec![dotbox((0, 1)), dotbox((1, 1))]);
+        assert_that!(board.associated_boxes(edge((1, 1), (2, 1))))
+            .is_equal_to(vec![dotbox((1, 0)), dotbox((1, 1))]);
+
+        // Border edges with 1 result
+        assert_that!(board.associated_boxes(edge((0, 0), (0, 1))))
+            .is_equal_to(vec![dotbox((0, 0))]);
+        assert_that!(board.associated_boxes(edge((0, 0), (1, 0))))
+            .is_equal_to(vec![dotbox((0, 0))]);
+        assert_that!(board.associated_boxes(edge((2, 2), (1, 2))))
+            .is_equal_to(vec![dotbox((1, 1))]);
+        assert_that!(board.associated_boxes(edge((2, 1), (2, 2))))
+            .is_equal_to(vec![dotbox((1, 1))]);
+
+        // Invalid edge with 0 results
+        assert_that!(board.associated_boxes(edge((10, 10), (10, 11)))).is_equal_to(vec![]);
+    }
+}
+mod test_iterators {
+    use super::*;
 
     #[test]
     fn test_iter_dots() {
